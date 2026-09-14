@@ -165,36 +165,18 @@
     </div>
 
     <script>
-        // ⚙️ إعدادات JSONBin.io
-        const JSONBIN_API_KEY = '$2a$10$Qx1GRgzKCxc.hXcHWdGuOur4W4S6nXiYpSOEDtnNZUYYYQVSqWux2';
-        const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b';
-
-        // ✅ قراءة البيانات من JSONBin.io
-        async function getReportData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const binId = urlParams.get('id');
-            
-            if (!binId) {
+        // ✅ قراءة البيانات من الرابط
+        function getReportData() {
+            const hash = window.location.hash;
+            if (!hash || !hash.includes('data=')) {
                 return null;
             }
-            
             try {
-                const response = await fetch(JSONBIN_API_URL + '/' + binId + '/latest', {
-                    method: 'GET',
-                    headers: {
-                        'X-Master-Key': JSONBIN_API_KEY
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('فشل في جلب التقرير');
-                }
-                
-                const data = await response.json();
-                console.log('✅ تم جلب التقرير بنجاح');
-                return data.record;
+                const encoded = hash.split('data=')[1];
+                const decoded = decodeURIComponent(escape(atob(encoded)));
+                return JSON.parse(decoded);
             } catch (e) {
-                console.error('❌ خطأ في جلب البيانات:', e);
+                console.error('خطأ في قراءة البيانات:', e);
                 return null;
             }
         }
@@ -246,6 +228,7 @@
                 </button>
             `;
 
+            // عرض الأخطاء
             if (data.wrongQuestions && data.wrongQuestions.length > 0) {
                 html += `<h2 style="color:#ef4444; margin:25px 0 15px; text-align:center; font-weight: 900;">❌ الأخطاء (${data.wrongQuestions.length})</h2>`;
                 
@@ -280,8 +263,8 @@
         }
 
         // ✅ إرسال الأخطاء للطالب (من جهاز المعلم)
-        async function sendToStudent() {
-            const data = await getReportData();
+        function sendToStudent() {
+            const data = getReportData();
             if (!data) {
                 alert('❌ لا توجد بيانات');
                 return;
@@ -321,15 +304,13 @@
             message += `👨‍🏫 إعداد: المهندس / أشرف موسى\n\n`;
             message += `📞 01110547129 - 01100429783`;
 
+            // ✅ فتح واتساب على رقم الطالب
             window.location.href = 'https://wa.me/' + data.phone + '?text=' + encodeURIComponent(message);
         }
 
         // ✅ عرض التقرير عند التحميل
-        window.addEventListener('DOMContentLoaded', async function() {
-            const container = document.getElementById('container');
-            container.innerHTML = '<div class="loading">⏳ جاري تحميل التقرير...</div>';
-            
-            const data = await getReportData();
+        window.addEventListener('DOMContentLoaded', function() {
+            const data = getReportData();
             renderReport(data);
         });
     </script>
