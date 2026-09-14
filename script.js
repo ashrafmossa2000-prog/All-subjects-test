@@ -1,6 +1,4 @@
-/* ============================================================
-   نظام الدخول والحماية
-   ============================================================ */
+/* ===== نظام الدخول والحماية ===== */
 
 const validCodes = {
     "AAA001": "اشرف موسى",
@@ -29,6 +27,15 @@ const validCodes = {
     "AAA025": "أحمد رضا"
 };
 
+/* ============================================================
+   ⚙️ إعدادات JSONBin.io
+   ============================================================ */
+const JSONBIN_API_KEY = '$2a$10$Qx1GRgzKCxc.hXcHWdGuOur4W4S6nXiYpSOEDtnNZUYYYQVSqWux2';
+const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b';
+
+/* ============================================================
+   ⚠️ رابط صفحة report.html على GitHub Pages
+   ============================================================ */
 const REPORT_PAGE_URL = 'https://ashrafmossa2000-prog.github.io/-/report.html';
 
 // عناصر شاشة الدخول
@@ -40,12 +47,12 @@ const loginStudentPhone = document.getElementById('loginStudentPhone');
 const loginCode = document.getElementById('loginCode');
 const loginError = document.getElementById('loginError');
 
+// ✅ متغير عام لحفظ رقم الطالب
 let studentPhoneNumber = '';
-let currentSubject = 'science'; // ✅ المادة الافتراضية
 
-/* ============================================================
-   استرجاع البيانات المحفوظة
-   ============================================================ */
+// ============================================================
+// ✅ استرجاع البيانات المحفوظة عند فتح البرنامج
+// ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     const savedPhone = localStorage.getItem('studentPhone');
     const savedName = localStorage.getItem('studentName');
@@ -59,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loginStudentName.value = savedName;
     }
     
-    // ✅ تفعيل أدوات المعلم بالضغط 5 مرات
     const resultScreen = document.getElementById('resultScreen');
     if (resultScreen) {
         let clickCount = 0;
@@ -67,9 +73,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         resultScreen.addEventListener('click', function(e) {
             if (e.target.tagName === 'BUTTON') return;
+            
             clickCount++;
+            
             if (clickTimer) clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+            
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 1000);
             
             if (clickCount >= 5) {
                 clickCount = 0;
@@ -87,9 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-/* ============================================================
-   تسجيل الدخول
-   ============================================================ */
+// عند الضغط على زر الدخول
 loginBtn.addEventListener('click', function() {
     const name = loginStudentName.value.trim();
     const phone = loginStudentPhone.value.trim().replace(/[^0-9]/g, '');
@@ -107,6 +116,7 @@ loginBtn.addEventListener('click', function() {
         startScreen.style.display = 'flex';
         
         studentPhoneNumber = phone;
+        
         localStorage.setItem('studentPhone', phone);
         localStorage.setItem('studentName', name);
         
@@ -123,6 +133,7 @@ loginBtn.addEventListener('click', function() {
 /* =============================================
    المتغيرات العامة
    ============================================= */
+
 let currentQuestions = [];
 let currentIndex = 0;
 let score = 0;
@@ -133,81 +144,602 @@ let studentAnswers = [];
 let examStartTime = null;
 let examEndTime = null;
 
-/* ============================================================
-   ✅ التعامل مع قائمة المواد المنسدلة (subjectSelect)
-   ============================================================ */
-const subjectSelect = document.getElementById('subjectSelect');
-
-if (subjectSelect) {
-    subjectSelect.addEventListener('change', function() {
-        currentSubject = this.value;
-        console.log('📚 تم اختيار المادة:', currentSubject);
-        
-        // إعادة تعيين القوائم المنسدلة
-        const unitSelect = document.getElementById('unitSelect');
-        const lessonSelect = document.getElementById('lessonSelect');
-        unitSelect.innerHTML = '<option value="">-- اختر الوحدة --</option>';
-        lessonSelect.innerHTML = '<option value="">-- اختر الدرس --</option>';
-        
-        // إذا كان الصف مختاراً، نعيد تحميل الوحدات
-        const gradeSelect = document.getElementById('gradeSelect');
-        if (gradeSelect.value) {
-            loadUnitsForSubject(currentSubject, gradeSelect.value);
-        }
-    });
-}
-/* ============================================================
-   ✅ دالة تحميل الوحدات حسب المادة والصف
-   ============================================================ */
-function loadUnitsForSubject(subject, grade) {
+// ============================================================
+// دالة الحصول على معلومات الوحدة والدرس
+// ============================================================
+function getUnitAndLessonInfo() {
+    const gradeSelect = document.getElementById('gradeSelect');
     const unitSelect = document.getElementById('unitSelect');
     const lessonSelect = document.getElementById('lessonSelect');
     
-    unitSelect.innerHTML = '<option value="">-- اختر الوحدة --</option>';
-    lessonSelect.innerHTML = '<option value="">-- اختر الدرس --</option>';
+    let gradeName = gradeSelect ? gradeSelect.options[gradeSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
+    let unitName = unitSelect ? unitSelect.options[unitSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
+    let lessonName = lessonSelect ? lessonSelect.options[lessonSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
     
-    // التحقق من وجود البيانات
-    if (!questionsData[subject]) {
-        console.warn('⚠️ لا توجد بيانات للمادة:', subject);
-        return;
-    }
-    
-    if (!questionsData[subject][grade]) {
-        console.warn('⚠️ لا توجد بيانات للصف', grade, 'في مادة', subject);
-        return;
-    }
-    
-    const units = Object.keys(questionsData[subject][grade].units || {});
-    units.forEach(unit => {
-        const option = document.createElement('option');
-        option.value = unit;
-        option.textContent = unit;
-        unitSelect.appendChild(option);
-    });
+    return { gradeName, unitName, lessonName };
 }
 
-/* ============================================================
-   تحميل الوحدات عند اختيار الصف (معدّلة لدعم المواد)
-   ============================================================ */
+// ============================================================
+// دالة حساب الوقت المستغرق
+// ============================================================
+function getElapsedTime() {
+    if (!examStartTime || !examEndTime) return 'غير محدد';
+    
+    const diffMs = examEndTime - examStartTime;
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    let result = '';
+    if (hours > 0) result += `${hours} ساعة `;
+    if (minutes > 0) result += `${minutes} دقيقة `;
+    result += `${seconds} ثانية`;
+    
+    return result.trim();
+}
+
+// ============================================================
+// دالة حساب النتيجة الصحيحة
+// ============================================================
+function getCorrectScore() {
+    const total = currentQuestions && Array.isArray(currentQuestions) ? currentQuestions.length : 0;
+    const wrongCount = wrongQuestions.length;
+    const correctCount = total - wrongCount;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+    
+    return {
+        total: total,
+        correct: correctCount,
+        wrong: wrongCount,
+        percent: percent
+    };
+}
+
+// ============================================================
+// ✅ دالة إرسال النتيجة (مع تخزين في JSONBin.io)
+// ============================================================
+async function sendAnswers() {
+    const name = studentName || 'طالب';
+    const result = getCorrectScore();
+    const programName = '🧪 Science Quiz Pro';
+    const { gradeName, unitName, lessonName } = getUnitAndLessonInfo();
+    const elapsedTime = getElapsedTime();
+
+    // ✅ تجهيز بيانات الأخطاء
+    const reportData = {
+        student: name,
+        phone: studentPhoneNumber,
+        grade: gradeName,
+        unit: unitName,
+        lesson: lessonName,
+        score: result.correct,
+        total: result.total,
+        percent: result.percent,
+        time: elapsedTime,
+        date: new Date().toLocaleString('ar-EG'),
+        wrongQuestions: wrongQuestions.map(q => ({
+            question: q.question,
+            studentAnswer: q.studentAnswer,
+            correctAnswer: q.correctAnswer,
+            isEssay: q.isEssay || false
+        }))
+    };
+
+    // ✅ عرض رسالة انتظار
+    const btn = event?.target;
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري التجهيز...';
+    }
+
+    try {
+        // ✅ تخزين البيانات في JSONBin.io
+        const response = await fetch(JSONBIN_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_API_KEY,
+                'X-Bin-Private': 'false',
+                'X-Bin-Name': `report-${Date.now()}`
+            },
+            body: JSON.stringify(reportData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error('فشل في حفظ التقرير: ' + errorText);
+        }
+
+        const data = await response.json();
+        const binId = data.metadata.id;
+        
+        console.log('✅ تم حفظ التقرير، ID:', binId);
+
+        // ✅ الرابط القصير
+        const reportUrl = REPORT_PAGE_URL + '?id=' + binId;
+
+        let message =
+`📊 نتيجة اختبار الطالب
+
+📚 البرنامج: ${programName}
+📖 الصف: ${gradeName}
+📖 الوحدة: ${unitName}
+📝 الدرس: ${lessonName}
+
+👤 الاسم: ${name}
+📱 رقم الواتساب: ${studentPhoneNumber}
+
+🏆 الدرجة: ${result.correct} من ${result.total}
+📈 النسبة: ${result.percent}%
+⏱️ الوقت المستغرق: ${elapsedTime}
+
+🕐 التاريخ:
+${new Date().toLocaleString('ar-EG')}
+
+━━━━━━━━━━━━━━━━━━━
+
+📋 لعرض الأخطاء وإرسالها للطالب:
+
+🔗 اضغط على الرابط التالي:
+${reportUrl}
+
+━━━━━━━━━━━━━━━━━━━
+
+👨‍🏫 إعداد:
+المهندس / أشرف موسى
+
+📞 للتواصل:
+01110547129 - 01100429783`;
+
+        const teacherPhone = '201100429783';
+        window.location.href = 'https://wa.me/' + teacherPhone + '?text=' + encodeURIComponent(message);
+
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        alert('❌ حدث خطأ أثناء تجهيز التقرير.\n\n' + error.message + '\n\nتحقق من اتصال الإنترنت وحاول مرة أخرى.');
+        
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+}
+
+// ============================================================
+// دالة إرسال الأخطاء للطالب (نفس الجهاز)
+// ============================================================
+function sendWrongQuestionsToStudent() {
+    if (wrongQuestions.length === 0) {
+        alert('🎉 لا توجد أخطاء لإرسالها! أحسنت!');
+        return;
+    }
+
+    const savedPhone = localStorage.getItem('studentPhone') || studentPhoneNumber;
+    
+    if (!savedPhone || savedPhone.length < 10) {
+        alert('❌ لم يتم العثور على رقم الطالب.');
+        return;
+    }
+
+    const name = studentName || 'طالب';
+    const result = getCorrectScore();
+    const { gradeName, unitName, lessonName } = getUnitAndLessonInfo();
+    const elapsedTime = getElapsedTime();
+
+    let message = `📋 تصحيح الأخطاء
+
+📚 الصف: ${gradeName}
+📖 الوحدة: ${unitName}
+📝 الدرس: ${lessonName}
+
+👤 الطالب: ${name}
+
+🏆 الدرجة: ${result.correct} من ${result.total}
+⏱️ الوقت المستغرق: ${elapsedTime}
+
+━━━━━━━━━━━━━━━━━━━
+
+❌ الأخطاء وتصحيحها:
+
+`;
+
+    wrongQuestions.forEach((item, index) => {
+        message += `سؤال ${index + 1}:\n`;
+        message += `📝 ${item.question}\n\n`;
+        
+        if (item.isEssay) {
+            message += `✏️ إجابتك: ${item.studentAnswer}\n`;
+            message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
+        } else {
+            message += `❌ إجابتك (خطأ): ${item.studentAnswer}\n`;
+            message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
+        }
+        
+        message += `\n━━━━━━━━━━━━━━━━━━━\n\n`;
+    });
+
+    message += `🕐 التاريخ:\n${new Date().toLocaleString('ar-EG')}\n\n`;
+    message += `👨‍🏫 إعداد:\nالمهندس / أشرف موسى\n\n`;
+    message += `📞 للتواصل:\n01110547129 - 01100429783`;
+
+    window.location.href = 'https://wa.me/' + savedPhone + '?text=' + encodeURIComponent(message);
+    
+    alert('✅ تم فتح واتساب لإرسال الأخطاء للطالب على الرقم: ' + savedPhone);
+}
+
+// ============================================================
+// دالة إرسال التقرير الكامل للمعلم
+// ============================================================
+function sendFullReportToTeacher() {
+    const name = studentName || 'طالب';
+    const result = getCorrectScore();
+    const { gradeName, unitName, lessonName } = getUnitAndLessonInfo();
+    const elapsedTime = getElapsedTime();
+
+    let message = `📋 تقرير مفصل للاختبار
+
+📚 الصف: ${gradeName}
+📖 الوحدة: ${unitName}
+📝 الدرس: ${lessonName}
+
+👤 اسم الطالب: ${name}
+📱 رقم الواتساب: ${studentPhoneNumber}
+
+━━━━━━━━━━━━━━━━━━━
+
+📊 الإحصائيات:
+✅ إجابات صحيحة: ${result.correct}
+❌ إجابات خاطئة: ${result.wrong}
+🏆 الدرجة: ${result.correct} من ${result.total}
+📈 النسبة: ${result.percent}%
+⏱️ الوقت المستغرق: ${elapsedTime}
+
+━━━━━━━━━━━━━━━━━━━
+
+`;
+
+    if (wrongQuestions.length > 0) {
+        message += `❌ الأسئلة الخاطئة:\n\n`;
+        
+        wrongQuestions.forEach((item, index) => {
+            message += `🔴 سؤال ${index + 1}:\n`;
+            message += `📝 ${item.question}\n\n`;
+            message += `✏️ إجابة الطالب: ${item.studentAnswer}\n`;
+            message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
+            message += `\n━━━━━━━━━━━━━━━━━━━\n\n`;
+        });
+    } else {
+        message += `🎉 ممتاز! لا توجد أخطاء\n\n`;
+    }
+
+    message += `🕐 التاريخ:\n${new Date().toLocaleString('ar-EG')}\n\n`;
+    message += `👨‍🏫 إعداد:\nالمهندس / أشرف موسى\n\n`;
+    message += `📞 للتواصل:\n01110547129 - 01100429783`;
+
+    const teacherPhone = '201100429783';
+    window.location.href = 'https://wa.me/' + teacherPhone + '?text=' + encodeURIComponent(message);
+}
+
+// ============================================================
+// دالة نسخ النتيجة
+// ============================================================
+function copyResult() {
+    const name = studentName || 'طالب';
+    const result = getCorrectScore();
+    const { gradeName, unitName, lessonName } = getUnitAndLessonInfo();
+    const elapsedTime = getElapsedTime();
+    
+    const message =
+`📊 نتيجة اختبار الطالب
+
+📖 الصف: ${gradeName}
+📖 الوحدة: ${unitName}
+📝 الدرس: ${lessonName}
+
+👤 الاسم: ${name}
+
+🏆 الدرجة: ${result.correct} من ${result.total}
+📈 النسبة: ${result.percent}%
+⏱️ الوقت المستغرق: ${elapsedTime}
+
+🕐 التاريخ:
+${new Date().toLocaleString('ar-EG')}
+
+👨‍🏫 إعداد:
+المهندس / أشرف موسى
+
+📞 01110547129 - 01100429783`;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(message).then(() => alert('✅ تم نسخ النتيجة بنجاح!')).catch(() => fallbackCopy(message));
+    } else { fallbackCopy(message); }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try { document.execCommand('copy'); alert('✅ تم نسخ النتيجة بنجاح!'); } catch (err) { alert('❌ حدث خطأ أثناء النسخ.'); }
+    document.body.removeChild(textarea);
+}
+
+// ============================================================
+// دالة عرض الامتحان كامل
+// ============================================================
+function showExamPaper() {
+    const grade = document.getElementById('examSelect').value;
+    const name = document.getElementById('studentName').value.trim() || 'الطالب';
+    if (!grade) { alert('⚠️ من فضلك اختر الامتحان أولاً'); return; }
+    let unit = 'الوحدة الأولى';
+    let lesson = 'الدرس الأول';
+    if (grade === 'prep2_exam') { lesson = 'الامتحان'; }
+    let questions;
+    try { questions = questionsData[grade].units[unit].lessons[lesson]; } catch (e) { alert('⚠️ لا توجد أسئلة لهذا الامتحان'); return; }
+    if (!questions || questions.length === 0) { alert('⚠️ لا توجد أسئلة'); return; }
+    const win = window.open('', '_blank');
+    win.document.write('<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>الامتحان</title><style>body{font-family:Arial;padding:20px;max-width:800px;margin:auto;line-height:1.8;}h1{text-align:center;color:#667eea;}.q{margin:15px 0;padding:10px;border-bottom:1px solid #eee;}.options{margin-right:20px;}</style></head><body>');
+    win.document.write('<h1>📝 الامتحان</h1>');
+    win.document.write(`<p><strong>👤 اسم الطالب:</strong> _______________</p><hr>`);
+    questions.forEach((q, i) => {
+        win.document.write(`<div class="q"><strong>${i+1}. ${q.question}</strong><br>`);
+        if (q.options && q.options.length > 0) {
+            win.document.write('<div class="options">');
+            q.options.forEach(opt => { win.document.write(`<div>⬜ ${opt}</div>`); });
+            win.document.write('</div>');
+        }
+        win.document.write('</div>');
+    });
+    win.document.write('<hr><p style="text-align:center;color:#888;">تم إنشاء هذا الامتحان بواسطة Science Quiz Pro</p>');
+    win.document.write('</body></html>');
+    win.document.close();
+}
+
+// ============================================================
+// دالة طباعة الأسئلة PDF
+// ============================================================
+function printQuestionsAsPDF() {
+    const gradeSelect = document.getElementById('gradeSelect');
+    const unitSelect = document.getElementById('unitSelect');
+    const lessonSelect = document.getElementById('lessonSelect');
+    const studentNameInput = document.getElementById('studentName');
+    const student = studentNameInput.value.trim() || 'الطالب';
+    const gradeText = gradeSelect ? gradeSelect.options[gradeSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
+    const unitText = unitSelect ? unitSelect.options[unitSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
+    const lessonText = lessonSelect ? lessonSelect.options[lessonSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
+
+    const gradeVal = gradeSelect ? gradeSelect.value : '';
+    const unitVal = unitSelect ? unitSelect.value : '';
+    const lessonVal = lessonSelect ? lessonSelect.value : '';
+    let questions = [];
+    
+    if (gradeVal && unitVal && lessonVal && questionsData[gradeVal] && questionsData[gradeVal].units[unitVal] && questionsData[gradeVal].units[unitVal].lessons[lessonVal]) {
+        questions = questionsData[gradeVal].units[unitVal].lessons[lessonVal];
+    } else {
+        const examVal = document.getElementById('examSelect')?.value;
+        if (examVal && typeof examQuestions !== 'undefined' && examQuestions[examVal]) {
+            questions = examQuestions[examVal].questions || [];
+        }
+    }
+    
+    if (!questions || questions.length === 0) {
+        alert('⚠️ لا توجد أسئلة للطباعة.');
+        return;
+    }
+
+    const groupedQuestions = {
+        mcq: { title: '📝 اختر الإجابة الصحيحة', questions: [] },
+        truefalse: { title: '📝 صح أم خطأ', questions: [] },
+        concept: { title: '📝 أكمل العبارات', questions: [] },
+        definition: { title: '📝 ما المقصود بـ', questions: [] },
+        explain: { title: '📝 علّل', questions: [] },
+        other: { title: '📝 أسئلة متنوعة', questions: [] }
+    };
+
+    questions.forEach(q => {
+        if (q.type === 'mcq') groupedQuestions.mcq.questions.push(q);
+        else if (q.type === 'truefalse') groupedQuestions.truefalse.questions.push(q);
+        else if (q.type === 'concept') groupedQuestions.concept.questions.push(q);
+        else if (q.type === 'definition') groupedQuestions.definition.questions.push(q);
+        else if (q.type === 'explain') groupedQuestions.explain.questions.push(q);
+        else groupedQuestions.other.questions.push(q);
+    });
+
+    const sections = [];
+    for (const key in groupedQuestions) {
+        if (groupedQuestions[key].questions.length > 0) sections.push(groupedQuestions[key]);
+    }
+
+    if (sections.length === 0) { alert('⚠️ لا توجد أسئلة للطباعة.'); return; }
+
+    const win = window.open('', '_blank');
+    win.document.write(`<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>أسئلة للطباعة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 25px; max-width: 900px; margin: auto; line-height: 2; background: #fff; padding-bottom: 50px; }
+        .print-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #e8ebff; border-top: 2px solid #6366f1; text-align: center; padding: 10px 0; font-weight: bold; color: #333; font-size: 14px; }
+        .header-info { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #6366f1; padding-bottom: 15px; }
+        .header-info h1 { color: #6366f1; font-size: 1.6em; margin-bottom: 8px; }
+        .header-info .student-name { font-size: 1.3em; font-weight: bold; color: #2c3e50; margin-bottom: 3px; }
+        .header-info .details { font-size: 1em; color: #555; }
+        .section-title { font-size: 1.2em; font-weight: bold; color: #6366f1; margin: 20px 0 10px 0; padding: 5px 10px; background: #f0f2ff; border-radius: 8px; border-right: 4px solid #6366f1; }
+        .question-block { margin: 10px 0; padding: 8px 15px; border-bottom: 1px dashed #ddd; page-break-inside: avoid; }
+        .question-block .q-text { font-weight: bold; font-size: 1.05em; }
+        .options-row { display: flex; flex-wrap: wrap; gap: 10px 25px; padding-right: 20px; margin-top: 3px; }
+        .options-row .opt { font-size: 0.95em; color: #333; }
+        .answer-space { border-bottom: 1px solid #ccc; min-height: 35px; margin-top: 5px; margin-right: 20px; }
+        .truefalse-brackets { display: inline-block; margin-left: 10px; font-size: 1.2em; font-weight: bold; letter-spacing: 3px; }
+        @media print { body { padding: 12px; padding-bottom: 50px; } .question-block { page-break-inside: avoid; } .answer-space { border-bottom: 1px solid #000; } .section-title { background: #e8ebff !important; -webkit-print-color-adjust: exact; } }
+    </style></head><body>`);
+    
+    win.document.write(`
+        <div class="header-info">
+            <h1>📝 أسئلة الاختبار</h1>
+            <div class="student-name">👤 ${student}</div>
+            <div class="details">📚 ${gradeText} | 📖 ${unitText} | 📝 ${lessonText}</div>
+        </div>
+    `);
+    
+    let questionCounter = 1;
+    
+    sections.forEach(section => {
+        win.document.write(`<div class="section-title">${section.title}</div>`);
+        
+        section.questions.forEach(q => {
+            win.document.write(`<div class="question-block">`);
+            
+            if (q.type === 'mcq') {
+                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
+                if (q.options && q.options.length > 0) {
+                    win.document.write(`<div class="options-row">`);
+                    q.options.forEach((opt, idx) => {
+                        win.document.write(`<div class="opt">${idx+1} - ${opt}</div>`);
+                    });
+                    win.document.write(`</div>`);
+                }
+            }
+            else if (q.type === 'truefalse') {
+                win.document.write(`<div class="q-text">${questionCounter}. <span class="truefalse-brackets">( )</span> ${q.question}</div>`);
+            }
+            else if (q.type === 'concept') {
+                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
+            }
+            else if (q.type === 'definition' || q.type === 'explain') {
+                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
+                win.document.write(`<div class="answer-space"></div>`);
+            }
+            else {
+                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
+                if (q.options && q.options.length > 0) {
+                    win.document.write(`<div class="options-row">`);
+                    q.options.forEach((opt, idx) => {
+                        win.document.write(`<div class="opt">${idx+1} - ${opt}</div>`);
+                    });
+                    win.document.write(`</div>`);
+                } else {
+                    win.document.write(`<div class="answer-space"></div>`);
+                }
+            }
+            
+            win.document.write(`</div>`);
+            questionCounter++;
+        });
+    });
+    
+    win.document.write(`
+        <div class="print-footer">
+            إعداد المهندس/ اشرف موسى &nbsp;|&nbsp; 📞 01110547129 - 01100429783
+        </div>
+    `);
+    
+    win.document.write('</body></html>');
+    win.document.close();
+    win.focus();
+    win.print();
+}
+
+// ============================================================
+// دالة عرض الأسئلة الخاطئة (للمعلم)
+// ============================================================
+function showWrongQuestions() {
+    if (wrongQuestions.length === 0) {
+        alert('🎉 لا توجد أخطاء! أحسنت!');
+        return;
+    }
+    
+    const result = getCorrectScore();
+    
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>مراجعة الأخطاء</title>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 30px; max-width: 900px; margin: auto; line-height: 1.8; background: #f8f9fa; }
+            h1 { text-align: center; color: #ef4444; margin-bottom: 10px; }
+            .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 1.1em; }
+            .summary-box { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); text-align: center; border-right: 5px solid #6366f1; }
+            .summary-box p { font-size: 1.1em; margin: 5px 0; color: #333; }
+            .summary-box strong { color: #6366f1; }
+            .question-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-right: 5px solid #ef4444; }
+            .question-number { display: inline-block; background: #ef4444; color: white; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9em; margin-bottom: 10px; }
+            .question-text { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 15px; }
+            .answer-box { padding: 12px 18px; border-radius: 10px; margin: 10px 0; font-size: 1.05em; }
+            .wrong-answer { background: #fef2f2; border: 2px solid #ef4444; color: #991b1b; }
+            .correct-answer { background: #ecfdf5; border: 2px solid #10b981; color: #065f46; }
+            .label { font-weight: bold; display: block; margin-bottom: 5px; }
+            .footer { text-align: center; color: #888; margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; font-size: 0.95em; }
+        </style></head><body>
+        <h1>📋 مراجعة الأخطاء</h1>
+        <div class="subtitle">👤 ${studentName}</div>
+        <div class="summary-box">
+            <p>🏆 الدرجة: <strong>${result.correct} من ${result.total}</strong></p>
+            <p>📈 النسبة: <strong>${result.percent}%</strong></p>
+            <p>❌ عدد الأخطاء: <strong>${wrongQuestions.length}</strong></p>
+        </div>
+    `);
+    
+    wrongQuestions.forEach((item, index) => {
+        win.document.write(`
+            <div class="question-card">
+                <span class="question-number">السؤال ${index + 1}</span>
+                <div class="question-text">${item.question}</div>
+        `);
+        
+        if (item.isEssay) {
+            win.document.write(`
+                <div class="answer-box wrong-answer"><span class="label">❌ إجابتك:</span>${item.studentAnswer}</div>
+                <div class="answer-box correct-answer"><span class="label">✅ الإجابة الصحيحة:</span>${item.correctAnswer}</div>
+            `);
+        } else {
+            win.document.write(`
+                <div class="answer-box wrong-answer"><span class="label">❌ إجابتك (خطأ):</span>${item.studentAnswer}</div>
+                <div class="answer-box correct-answer"><span class="label">✅ الإجابة الصحيحة:</span>${item.correctAnswer}</div>
+            `);
+        }
+        
+        win.document.write(`</div>`);
+    });
+    
+    win.document.write(`
+        <div class="footer">👨‍🏫 إعداد: المهندس / أشرف موسى<br>📞 01110547129 - 01100429783</div>
+        </body></html>
+    `);
+    win.document.close();
+}
+
+// ============================================================
+// تحميل الوحدات عند اختيار الصف
+// ============================================================
 document.getElementById('gradeSelect').addEventListener('change', function() {
     const grade = this.value;
-    loadUnitsForSubject(currentSubject, grade);
+    const unitSelect = document.getElementById('unitSelect');
+    const lessonSelect = document.getElementById('lessonSelect');
+    unitSelect.innerHTML = '<option value="">-- اختر الوحدة --</option>';
+    lessonSelect.innerHTML = '<option value="">-- اختر الدرس --</option>';
+    if (grade && questionsData[grade]) {
+        const units = Object.keys(questionsData[grade].units);
+        units.forEach(unit => {
+            const option = document.createElement('option');
+            option.value = unit;
+            option.textContent = unit;
+            unitSelect.appendChild(option);
+        });
+    }
 });
 
-/* ============================================================
-   تحميل الدروس عند اختيار الوحدة (معدّلة لدعم المواد)
-   ============================================================ */
+// ============================================================
+// تحميل الدروس عند اختيار الوحدة
+// ============================================================
 document.getElementById('unitSelect').addEventListener('change', function() {
     const grade = document.getElementById('gradeSelect').value;
     const unit = this.value;
     const lessonSelect = document.getElementById('lessonSelect');
     lessonSelect.innerHTML = '<option value="">-- اختر الدرس --</option>';
-    
-    if (grade && unit && questionsData[currentSubject] && 
-        questionsData[currentSubject][grade] && 
-        questionsData[currentSubject][grade].units[unit]) {
-        
-        const lessons = Object.keys(questionsData[currentSubject][grade].units[unit].lessons || {});
+    if (grade && unit && questionsData[grade] && questionsData[grade].units[unit]) {
+        const lessons = Object.keys(questionsData[grade].units[unit].lessons);
         lessons.forEach(lesson => {
             const option = document.createElement('option');
             option.value = lesson;
@@ -217,33 +749,21 @@ document.getElementById('unitSelect').addEventListener('change', function() {
     }
 });
 
-/* ============================================================
-   بدء الاختبار العادي (معدّلة لدعم المواد)
-   ============================================================ */
+// ============================================================
+// بدء الاختبار العادي
+// ============================================================
 document.getElementById('startBtn').addEventListener('click', function() {
     const name = document.getElementById('studentName').value.trim();
     const grade = document.getElementById('gradeSelect').value;
     const unit = document.getElementById('unitSelect').value;
     const lesson = document.getElementById('lessonSelect').value;
-    
     if (!name) { alert('⚠️ من فضلك أدخل اسم الطالب'); return; }
     if (!grade) { alert('⚠️ من فضلك اختر الصف'); return; }
     if (!unit) { alert('⚠️ من فضلك اختر الوحدة'); return; }
     if (!lesson) { alert('⚠️ من فضلك اختر الدرس'); return; }
-    
     let questions;
-    try {
-        questions = questionsData[currentSubject][grade].units[unit].lessons[lesson];
-    } catch (e) {
-        alert('⚠️ لا توجد أسئلة لهذا الدرس في مادة ' + currentSubject);
-        return;
-    }
-    
-    if (!questions || questions.length === 0) {
-        alert('⚠️ لا توجد أسئلة');
-        return;
-    }
-    
+    try { questions = questionsData[grade].units[unit].lessons[lesson]; } catch (e) { alert('⚠️ لا توجد أسئلة لهذا الدرس'); return; }
+    if (!questions || questions.length === 0) { alert('⚠️ لا توجد أسئلة'); return; }
     currentQuestions = questions;
     currentIndex = 0;
     score = 0;
@@ -264,38 +784,22 @@ document.getElementById('startBtn').addEventListener('click', function() {
     showQuestion();
 });
 
-/* ============================================================
-   بدء الامتحان
-   ============================================================ */
+// ============================================================
+// بدء الامتحان
+// ============================================================
 document.getElementById('examStartBtn').addEventListener('click', function() {
     const name = document.getElementById('studentName').value.trim();
     const grade = document.getElementById('examSelect').value;
-    
     if (!name) { alert('⚠️ من فضلك أدخل اسم الطالب'); return; }
     if (!grade) { alert('⚠️ من فضلك اختر الامتحان'); return; }
-    
     let questions;
     try {
-        if (typeof examQuestions === 'undefined') {
-            alert('⚠️ ملف examQuestions.js لم يتم تحميله');
-            return;
-        }
+        if (typeof examQuestions === 'undefined') { alert('⚠️ ملف examQuestions.js لم يتم تحميله'); return; }
         const examData = examQuestions[grade];
-        if (!examData) {
-            alert('⚠️ لا توجد أسئلة لهذا الامتحان');
-            return;
-        }
+        if (!examData) { alert('⚠️ لا توجد أسئلة لهذا الامتحان'); return; }
         questions = examData.questions;
-    } catch (e) {
-        alert('⚠️ حدث خطأ في تحميل الأسئلة');
-        return;
-    }
-    
-    if (!questions || questions.length === 0) {
-        alert('⚠️ لا توجد أسئلة');
-        return;
-    }
-    
+    } catch (e) { alert('⚠️ حدث خطأ في تحميل الأسئلة'); return; }
+    if (!questions || questions.length === 0) { alert('⚠️ لا توجد أسئلة'); return; }
     currentQuestions = questions;
     currentIndex = 0;
     score = 0;
@@ -316,9 +820,9 @@ document.getElementById('examStartBtn').addEventListener('click', function() {
     showQuestion();
 });
 
-/* ============================================================
-   عرض السؤال
-   ============================================================ */
+// ============================================================
+// عرض السؤال
+// ============================================================
 function showQuestion() {
     const question = currentQuestions[currentIndex];
     if (!question) return;
@@ -332,22 +836,18 @@ function showQuestion() {
     const nextBtn = document.getElementById('nextBtn');
     nextBtn.style.display = 'none';
     
-    // الأسئلة المقالية
     if (question.type === 'explain' || question.type === 'definition' || question.type === 'concept') {
         const textarea = document.createElement('textarea');
         textarea.id = 'essayAnswer';
         textarea.placeholder = 'اكتب إجابتك هنا...';
         textarea.rows = 5;
         container.appendChild(textarea);
+        
         nextBtn.style.display = 'block';
         nextBtn.textContent = '➡️ السؤال التالي';
-        
-        const progress = totalQuestions > 0 ? (currentIndex / totalQuestions) * 100 : 0;
-        document.getElementById('progressBar').style.width = progress + '%';
         return;
     }
     
-    // الأسئلة الاختيارية
     const options = question.options || [];
     options.forEach((option, index) => {
         const button = document.createElement('button');
@@ -363,14 +863,15 @@ function showQuestion() {
     document.getElementById('progressBar').style.width = progress + '%';
 }
 
-/* ============================================================
-   اختيار إجابة
-   ============================================================ */
+// ============================================================
+// اختيار إجابة
+// ============================================================
 function selectAnswer(selectedIndex) {
     const question = currentQuestions[currentIndex];
     const buttons = document.querySelectorAll('.answer-btn');
     
     buttons.forEach(btn => btn.disabled = true);
+    
     buttons.forEach((btn, index) => {
         if (index === selectedIndex) {
             btn.classList.add('selected');
@@ -387,9 +888,9 @@ function selectAnswer(selectedIndex) {
     document.getElementById('nextBtn').style.display = 'block';
 }
 
-/* ============================================================
-   الانتقال للسؤال التالي
-   ============================================================ */
+// ============================================================
+// الانتقال للسؤال التالي
+// ============================================================
 document.getElementById('nextBtn').addEventListener('click', function() {
     const question = currentQuestions[currentIndex];
     
@@ -411,11 +912,12 @@ document.getElementById('nextBtn').addEventListener('click', function() {
     }
 });
 
-/* ============================================================
-   عرض النتيجة
-   ============================================================ */
+// ============================================================
+// عرض النتيجة
+// ============================================================
 function showResult() {
     examEndTime = new Date();
+    
     score = 0;
     wrongQuestions = [];
     
@@ -525,9 +1027,9 @@ function showResult() {
     }
 }
 
-/* ============================================================
-   إعادة الاختبار
-   ============================================================ */
+// ============================================================
+// إعادة الاختبار
+// ============================================================
 document.getElementById('restartBtn').addEventListener('click', function() {
     document.getElementById('resultScreen').style.display = 'none';
     document.getElementById('startScreen').style.display = 'flex';
@@ -542,600 +1044,14 @@ document.getElementById('restartBtn').addEventListener('click', function() {
     examEndTime = null;
 });
 
-/* ============================================================
-   ربط زر الطباعة
-   ============================================================ */
+// ============================================================
+// ربط زر الطباعة
+// ============================================================
 document.getElementById('printPdfBtn').addEventListener('click', printQuestionsAsPDF);
 
-/* ============================================================
-   دالة الحصول على معلومات الوحدة والدرس
-   ============================================================ */
-function getUnitAndLessonInfo() {
-    const gradeSelect = document.getElementById('gradeSelect');
-    const unitSelect = document.getElementById('unitSelect');
-    const lessonSelect = document.getElementById('lessonSelect');
-    
-    let gradeName = gradeSelect ? gradeSelect.options[gradeSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
-    let unitName = unitSelect ? unitSelect.options[unitSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
-    let lessonName = lessonSelect ? lessonSelect.options[lessonSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
-    
-    // ✅ إضافة اسم المادة
-    const subjectNames = {
-        science: 'العلوم',
-        arabic: 'اللغة العربية',
-        math: 'الرياضيات',
-        social: 'الدراسات الاجتماعية',
-        english: 'اللغة الإنجليزية'
-    };
-    let subjectName = subjectNames[currentSubject] || currentSubject;
-    
-    return { gradeName, unitName, lessonName, subjectName };
-}
-
-/* ============================================================
-   دالة حساب الوقت المستغرق
-   ============================================================ */
-function getElapsedTime() {
-    if (!examStartTime || !examEndTime) return 'غير محدد';
-    
-    const diffMs = examEndTime - examStartTime;
-    const totalSeconds = Math.floor(diffMs / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    
-    let result = '';
-    if (hours > 0) result += `${hours} ساعة `;
-    if (minutes > 0) result += `${minutes} دقيقة `;
-    result += `${seconds} ثانية`;
-    
-    return result.trim();
-}
-
-/* ============================================================
-   دالة حساب النتيجة الصحيحة
-   ============================================================ */
-function getCorrectScore() {
-    const total = currentQuestions && Array.isArray(currentQuestions) ? currentQuestions.length : 0;
-    const wrongCount = wrongQuestions.length;
-    const correctCount = total - wrongCount;
-    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-    
-    return {
-        total: total,
-        correct: correctCount,
-        wrong: wrongCount,
-        percent: percent
-    };
-}
-
-/* ============================================================
-   إرسال النتيجة (مع ضغط البيانات)
-   ============================================================ */
-function sendAnswers() {
-    const name = studentName || 'طالب';
-    const result = getCorrectScore();
-    const programName = '🧪 Science Quiz Pro';
-    const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
-    const elapsedTime = getElapsedTime();
-
-    const reportData = {
-        student: name,
-        phone: studentPhoneNumber,
-        subject: subjectName,
-        grade: gradeName,
-        unit: unitName,
-        lesson: lessonName,
-        score: result.correct,
-        total: result.total,
-        percent: result.percent,
-        time: elapsedTime,
-        date: new Date().toLocaleString('ar-EG'),
-        wrongQuestions: wrongQuestions.map(q => ({
-            question: q.question,
-            studentAnswer: q.studentAnswer,
-            correctAnswer: q.correctAnswer,
-            isEssay: q.isEssay || false
-        }))
-    };
-
-    let encodedData = '';
-    try {
-        if (typeof LZString !== 'undefined') {
-            encodedData = LZString.compressToEncodedURIComponent(JSON.stringify(reportData));
-        } else {
-            encodedData = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(reportData)))));
-        }
-    } catch (e) {
-        console.error('❌ خطأ في تشفير البيانات:', e);
-        encodedData = '';
-    }
-
-    const reportUrl = REPORT_PAGE_URL + '#data=' + encodedData;
-
-    let message =
-`📊 نتيجة اختبار الطالب
-
-📚 البرنامج: ${programName}
-📖 المادة: ${subjectName}
-📖 الصف: ${gradeName}
-📖 الوحدة: ${unitName}
-📝 الدرس: ${lessonName}
-
-👤 الاسم: ${name}
-📱 رقم الواتساب: ${studentPhoneNumber}
-
-🏆 الدرجة: ${result.correct} من ${result.total}
-📈 النسبة: ${result.percent}%
-⏱️ الوقت المستغرق: ${elapsedTime}
-
-🕐 التاريخ:
-${new Date().toLocaleString('ar-EG')}
-
-━━━━━━━━━━━━━━━━━━━
-
-📋 لعرض الأخطاء وإرسالها للطالب:
-
-🔗 اضغط على الرابط التالي:
-${reportUrl}
-
-━━━━━━━━━━━━━━━━━━━
-
-👨‍🏫 إعداد:
-المهندس / أشرف موسى
-
-📞 للتواصل:
-01110547129 - 01100429783`;
-
-    const teacherPhone = '201100429783';
-    window.location.href = 'https://wa.me/' + teacherPhone + '?text=' + encodeURIComponent(message);
-}
-
-/* ============================================================
-   إرسال الأخطاء للطالب
-   ============================================================ */
-function sendWrongQuestionsToStudent() {
-    if (wrongQuestions.length === 0) {
-        alert('🎉 لا توجد أخطاء لإرسالها! أحسنت!');
-        return;
-    }
-
-    const savedPhone = localStorage.getItem('studentPhone') || studentPhoneNumber;
-    
-    if (!savedPhone || savedPhone.length < 10) {
-        alert('❌ لم يتم العثور على رقم الطالب.\n\nتأكد من إدخال رقم الواتساب عند تسجيل الدخول.');
-        return;
-    }
-
-    const name = studentName || 'طالب';
-    const result = getCorrectScore();
-    const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
-    const elapsedTime = getElapsedTime();
-
-    let message = `📋 تصحيح الأخطاء
-
-📖 المادة: ${subjectName}
-📚 الصف: ${gradeName}
-📖 الوحدة: ${unitName}
-📝 الدرس: ${lessonName}
-
-👤 الطالب: ${name}
-
-🏆 الدرجة: ${result.correct} من ${result.total}
-⏱️ الوقت المستغرق: ${elapsedTime}
-
-━━━━━━━━━━━━━━━━━━━
-
-❌ الأخطاء وتصحيحها:
-
-`;
-
-    wrongQuestions.forEach((item, index) => {
-        message += `سؤال ${index + 1}:\n`;
-        message += `📝 ${item.question}\n\n`;
-        
-        if (item.isEssay) {
-            message += `✏️ إجابتك: ${item.studentAnswer}\n`;
-            message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
-        } else {
-            message += `❌ إجابتك (خطأ): ${item.studentAnswer}\n`;
-            message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
-        }
-        
-        message += `\n━━━━━━━━━━━━━━━━━━━\n\n`;
-    });
-
-    message += `🕐 التاريخ:\n${new Date().toLocaleString('ar-EG')}\n\n`;
-    message += `👨‍🏫 إعداد:\nالمهندس / أشرف موسى\n\n`;
-    message += `📞 للتواصل:\n01110547129 - 01100429783`;
-
-    window.location.href = 'https://wa.me/' + savedPhone + '?text=' + encodeURIComponent(message);
-    
-    alert('✅ تم فتح واتساب لإرسال الأخطاء للطالب على الرقم: ' + savedPhone);
-}
-
-/* ============================================================
-   إرسال التقرير الكامل للمعلم
-   ============================================================ */
-function sendFullReportToTeacher() {
-    const name = studentName || 'طالب';
-    const result = getCorrectScore();
-    const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
-    const elapsedTime = getElapsedTime();
-
-    let message = `📋 تقرير مفصل للاختبار
-
-📖 المادة: ${subjectName}
-📚 الصف: ${gradeName}
-📖 الوحدة: ${unitName}
-📝 الدرس: ${lessonName}
-
-👤 اسم الطالب: ${name}
-📱 رقم الواتساب: ${studentPhoneNumber}
-
-━━━━━━━━━━━━━━━━━━━
-
-📊 الإحصائيات:
-✅ إجابات صحيحة: ${result.correct}
-❌ إجابات خاطئة: ${result.wrong}
-🏆 الدرجة: ${result.correct} من ${result.total}
-📈 النسبة: ${result.percent}%
-⏱️ الوقت المستغرق: ${elapsedTime}
-
-━━━━━━━━━━━━━━━━━━━
-
-`;
-
-    if (wrongQuestions.length > 0) {
-        message += `❌ الأسئلة الخاطئة:\n\n`;
-        
-        wrongQuestions.forEach((item, index) => {
-            message += `🔴 سؤال ${index + 1}:\n`;
-            message += `📝 ${item.question}\n\n`;
-            
-            if (item.isEssay) {
-                message += `✏️ إجابة الطالب: ${item.studentAnswer}\n`;
-                message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
-            } else {
-                message += `✏️ إجابة الطالب (خطأ): ${item.studentAnswer}\n`;
-                message += `✅ الإجابة الصحيحة: ${item.correctAnswer}\n`;
-            }
-            
-            message += `\n━━━━━━━━━━━━━━━━━━━\n\n`;
-        });
-    } else {
-        message += `🎉 ممتاز! لا توجد أخطاء\n\n`;
-    }
-
-    message += `🕐 التاريخ:\n${new Date().toLocaleString('ar-EG')}\n\n`;
-    message += `👨‍🏫 إعداد:\nالمهندس / أشرف موسى\n\n`;
-    message += `📞 للتواصل:\n01110547129 - 01100429783`;
-
-    const teacherPhone = '201100429783';
-    window.location.href = 'https://wa.me/' + teacherPhone + '?text=' + encodeURIComponent(message);
-}
-
-/* ============================================================
-   نسخ النتيجة
-   ============================================================ */
-function copyResult() {
-    const name = studentName || 'طالب';
-    const result = getCorrectScore();
-    const programName = '🧪 Science Quiz Pro';
-    const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
-    const elapsedTime = getElapsedTime();
-    
-    const message =
-`📊 نتيجة اختبار الطالب
-
-📚 البرنامج: ${programName}
-📖 المادة: ${subjectName}
-📖 الصف: ${gradeName}
-📖 الوحدة: ${unitName}
-📝 الدرس: ${lessonName}
-
-👤 الاسم: ${name}
-
-🏆 الدرجة: ${result.correct} من ${result.total}
-📈 النسبة: ${result.percent}%
-⏱️ الوقت المستغرق: ${elapsedTime}
-
-🕐 التاريخ:
-${new Date().toLocaleString('ar-EG')}
-
-👨‍🏫 إعداد:
-المهندس / أشرف موسى
-
-📞 للتواصل:
-01110547129 - 01100429783`;
-    
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(message).then(() => alert('✅ تم نسخ النتيجة بنجاح!')).catch(() => fallbackCopy(message));
-    } else { fallbackCopy(message); }
-}
-
-function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try { document.execCommand('copy'); alert('✅ تم نسخ النتيجة بنجاح!'); } catch (err) { alert('❌ حدث خطأ أثناء النسخ.'); }
-    document.body.removeChild(textarea);
-}
-
-/* ============================================================
-   عرض الامتحان كامل
-   ============================================================ */
-function showExamPaper() {
-    const grade = document.getElementById('examSelect').value;
-    const name = document.getElementById('studentName').value.trim() || 'الطالب';
-    if (!grade) { alert('⚠️ من فضلك اختر الامتحان أولاً'); return; }
-    
-    let unit = 'الوحدة الأولى';
-    let lesson = 'الدرس الأول';
-    if (grade === 'prep2_exam') { lesson = 'الامتحان'; }
-    
-    let questions;
-    try { 
-        questions = questionsData[currentSubject][grade].units[unit].lessons[lesson]; 
-    } catch (e) { 
-        alert('⚠️ لا توجد أسئلة لهذا الامتحان'); 
-        return; 
-    }
-    
-    if (!questions || questions.length === 0) { alert('⚠️ لا توجد أسئلة'); return; }
-    
-    const win = window.open('', '_blank');
-    win.document.write('<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>الامتحان</title><style>body{font-family:Arial;padding:20px;max-width:800px;margin:auto;line-height:1.8;}h1{text-align:center;color:#667eea;}.q{margin:15px 0;padding:10px;border-bottom:1px solid #eee;}.options{margin-right:20px;}</style></head><body>');
-    win.document.write('<h1>📝 الامتحان</h1>');
-    win.document.write(`<p><strong>👤 اسم الطالب:</strong> _______________</p><hr>`);
-    
-    questions.forEach((q, i) => {
-        win.document.write(`<div class="q"><strong>${i+1}. ${q.question}</strong><br>`);
-        if (q.options && q.options.length > 0) {
-            win.document.write('<div class="options">');
-            q.options.forEach(opt => { win.document.write(`<div>⬜ ${opt}</div>`); });
-            win.document.write('</div>');
-        }
-        win.document.write('</div>');
-    });
-    
-    win.document.write('<hr><p style="text-align:center;color:#888;">تم إنشاء هذا الامتحان بواسطة Science Quiz Pro</p>');
-    win.document.write('</body></html>');
-    win.document.close();
-}
-
-/* ============================================================
-   طباعة الأسئلة PDF
-   ============================================================ */
-function printQuestionsAsPDF() {
-    const gradeSelect = document.getElementById('gradeSelect');
-    const unitSelect = document.getElementById('unitSelect');
-    const lessonSelect = document.getElementById('lessonSelect');
-    const studentNameInput = document.getElementById('studentName');
-    const student = studentNameInput.value.trim() || 'الطالب';
-    const gradeText = gradeSelect ? gradeSelect.options[gradeSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
-    const unitText = unitSelect ? unitSelect.options[unitSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
-    const lessonText = lessonSelect ? lessonSelect.options[lessonSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
-
-    const gradeVal = gradeSelect ? gradeSelect.value : '';
-    const unitVal = unitSelect ? unitSelect.value : '';
-    const lessonVal = lessonSelect ? lessonSelect.value : '';
-    let questions = [];
-    
-    if (gradeVal && unitVal && lessonVal && questionsData[currentSubject] && 
-        questionsData[currentSubject][gradeVal] && 
-        questionsData[currentSubject][gradeVal].units[unitVal] && 
-        questionsData[currentSubject][gradeVal].units[unitVal].lessons[lessonVal]) {
-        questions = questionsData[currentSubject][gradeVal].units[unitVal].lessons[lessonVal];
-    } else {
-        const examVal = document.getElementById('examSelect')?.value;
-        if (examVal && typeof examQuestions !== 'undefined' && examQuestions[examVal]) {
-            questions = examQuestions[examVal].questions || [];
-        }
-    }
-    
-    if (!questions || questions.length === 0) {
-        alert('⚠️ لا توجد أسئلة للطباعة. يرجى اختيار صف/وحدة/درس أو امتحان.');
-        return;
-    }
-
-    const groupedQuestions = {
-        mcq: { title: '📝 اختر الإجابة الصحيحة', questions: [] },
-        truefalse: { title: '📝 صح أم خطأ', questions: [] },
-        concept: { title: '📝 أكمل العبارات', questions: [] },
-        definition: { title: '📝 ما المقصود بـ', questions: [] },
-        explain: { title: '📝 علّل', questions: [] },
-        other: { title: '📝 أسئلة متنوعة', questions: [] }
-    };
-
-    questions.forEach(q => {
-        if (q.type === 'mcq') groupedQuestions.mcq.questions.push(q);
-        else if (q.type === 'truefalse') groupedQuestions.truefalse.questions.push(q);
-        else if (q.type === 'concept') groupedQuestions.concept.questions.push(q);
-        else if (q.type === 'definition') groupedQuestions.definition.questions.push(q);
-        else if (q.type === 'explain') groupedQuestions.explain.questions.push(q);
-        else groupedQuestions.other.questions.push(q);
-    });
-
-    const sections = [];
-    for (const key in groupedQuestions) {
-        if (groupedQuestions[key].questions.length > 0) sections.push(groupedQuestions[key]);
-    }
-
-    if (sections.length === 0) { alert('⚠️ لا توجد أسئلة للطباعة.'); return; }
-
-    const win = window.open('', '_blank');
-    win.document.write(`<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>أسئلة للطباعة</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 25px; max-width: 900px; margin: auto; line-height: 2; background: #fff; padding-bottom: 50px; }
-        .print-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #e8ebff; border-top: 2px solid #6366f1; text-align: center; padding: 10px 0; font-weight: bold; color: #333; font-size: 14px; z-index: 1000; }
-        .header-info { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #6366f1; padding-bottom: 15px; }
-        .header-info h1 { color: #6366f1; font-size: 1.6em; margin-bottom: 8px; }
-        .header-info .student-name { font-size: 1.3em; font-weight: bold; color: #2c3e50; margin-bottom: 3px; }
-        .header-info .details { font-size: 1em; color: #555; }
-        .section-title { font-size: 1.2em; font-weight: bold; color: #6366f1; margin: 20px 0 10px 0; padding: 5px 10px; background: #f0f2ff; border-radius: 8px; border-right: 4px solid #6366f1; }
-        .question-block { margin: 10px 0; padding: 8px 15px; border-bottom: 1px dashed #ddd; page-break-inside: avoid; }
-        .question-block .q-text { font-weight: bold; font-size: 1.05em; }
-        .options-row { display: flex; flex-wrap: wrap; gap: 10px 25px; padding-right: 20px; margin-top: 3px; }
-        .options-row .opt { font-size: 0.95em; color: #333; }
-        .answer-space { border-bottom: 1px solid #ccc; min-height: 35px; margin-top: 5px; margin-right: 20px; }
-        .truefalse-brackets { display: inline-block; margin-left: 10px; font-size: 1.2em; font-weight: bold; letter-spacing: 3px; }
-        @media print { body { padding: 12px; padding-bottom: 50px; } .question-block { page-break-inside: avoid; } .answer-space { border-bottom: 1px solid #000; } .section-title { background: #e8ebff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    </style></head><body>`);
-    
-    win.document.write(`
-        <div class="header-info">
-            <h1>📝 أسئلة الاختبار</h1>
-            <div class="student-name">👤 ${student}</div>
-            <div class="details">📚 ${gradeText} | 📖 ${unitText} | 📝 ${lessonText}</div>
-        </div>
-    `);
-    
-    let questionCounter = 1;
-    
-    sections.forEach(section => {
-        win.document.write(`<div class="section-title">${section.title}</div>`);
-        
-        section.questions.forEach(q => {
-            win.document.write(`<div class="question-block">`);
-            
-            if (q.type === 'mcq') {
-                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
-                if (q.options && q.options.length > 0) {
-                    win.document.write(`<div class="options-row">`);
-                    q.options.forEach((opt, idx) => {
-                        win.document.write(`<div class="opt">${idx+1} - ${opt}</div>`);
-                    });
-                    win.document.write(`</div>`);
-                }
-            }
-            else if (q.type === 'truefalse') {
-                win.document.write(`<div class="q-text">${questionCounter}. <span class="truefalse-brackets">( )</span> ${q.question}</div>`);
-            }
-            else if (q.type === 'concept') {
-                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
-            }
-            else if (q.type === 'definition' || q.type === 'explain') {
-                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
-                win.document.write(`<div class="answer-space"></div>`);
-            }
-            else {
-                win.document.write(`<div class="q-text">${questionCounter}. ${q.question}</div>`);
-                if (q.options && q.options.length > 0) {
-                    win.document.write(`<div class="options-row">`);
-                    q.options.forEach((opt, idx) => {
-                        win.document.write(`<div class="opt">${idx+1} - ${opt}</div>`);
-                    });
-                    win.document.write(`</div>`);
-                } else {
-                    win.document.write(`<div class="answer-space"></div>`);
-                }
-            }
-            
-            win.document.write(`</div>`);
-            questionCounter++;
-        });
-    });
-    
-    win.document.write(`
-        <div class="print-footer">
-            إعداد المهندس/ اشرف موسى &nbsp;|&nbsp; 📞 01110547129 - 01100429783
-        </div>
-    `);
-    
-    win.document.write('</body></html>');
-    win.document.close();
-    win.focus();
-    win.print();
-}
-
-/* ============================================================
-   عرض الأسئلة الخاطئة
-   ============================================================ */
-function showWrongQuestions() {
-    if (wrongQuestions.length === 0) {
-        alert('🎉 لا توجد أخطاء! أحسنت!');
-        return;
-    }
-    
-    const result = getCorrectScore();
-    const { subjectName } = getUnitAndLessonInfo();
-    
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>مراجعة الأخطاء</title>
-        <style>
-            body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 30px; max-width: 900px; margin: auto; line-height: 1.8; background: #f8f9fa; }
-            h1 { text-align: center; color: #ef4444; margin-bottom: 10px; }
-            .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 1.1em; }
-            .summary-box { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); text-align: center; border-right: 5px solid #6366f1; }
-            .summary-box p { font-size: 1.1em; margin: 5px 0; color: #333; }
-            .summary-box strong { color: #6366f1; }
-            .question-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-right: 5px solid #ef4444; }
-            .question-number { display: inline-block; background: #ef4444; color: white; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9em; margin-bottom: 10px; }
-            .question-text { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 15px; }
-            .answer-box { padding: 12px 18px; border-radius: 10px; margin: 10px 0; font-size: 1.05em; }
-            .wrong-answer { background: #fef2f2; border: 2px solid #ef4444; color: #991b1b; }
-            .correct-answer { background: #ecfdf5; border: 2px solid #10b981; color: #065f46; }
-            .label { font-weight: bold; display: block; margin-bottom: 5px; }
-            .footer { text-align: center; color: #888; margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; font-size: 0.95em; }
-        </style></head><body>
-        <h1>📋 مراجعة الأخطاء</h1>
-        <div class="subtitle">👤 ${studentName} | 📖 ${subjectName}</div>
-        <div class="summary-box">
-            <p>🏆 الدرجة: <strong>${result.correct} من ${result.total}</strong></p>
-            <p>📈 النسبة: <strong>${result.percent}%</strong></p>
-            <p>❌ عدد الأخطاء: <strong>${wrongQuestions.length}</strong></p>
-        </div>
-    `);
-    
-    wrongQuestions.forEach((item, index) => {
-        win.document.write(`
-            <div class="question-card">
-                <span class="question-number">السؤال ${index + 1}</span>
-                <div class="question-text">${item.question}</div>
-        `);
-        
-        if (item.isEssay) {
-            win.document.write(`
-                <div class="answer-box wrong-answer"><span class="label">❌ إجابتك:</span>${item.studentAnswer}</div>
-                <div class="answer-box correct-answer"><span class="label">✅ الإجابة الصحيحة:</span>${item.correctAnswer}</div>
-            `);
-        } else {
-            win.document.write(`
-                <div class="answer-box wrong-answer"><span class="label">❌ إجابتك (خطأ):</span>${item.studentAnswer}</div>
-                <div class="answer-box correct-answer"><span class="label">✅ الإجابة الصحيحة:</span>${item.correctAnswer}</div>
-            `);
-            
-            if (item.allOptions && item.allOptions.length > 0) {
-                win.document.write(`<div style="margin-top:15px;padding:10px;background:#f1f3f5;border-radius:8px;"><strong>📝 جميع الخيارات:</strong><ul style="margin-top:8px;padding-right:20px;">`);
-                item.allOptions.forEach((opt, i) => {
-                    let style = '';
-                    if (i === item.correctIndex) style = 'color:#10b981;font-weight:bold;';
-                    else if (i === item.selectedIndex) style = 'color:#ef4444;text-decoration:line-through;';
-                    win.document.write(`<li style="${style}">${opt}</li>`);
-                });
-                win.document.write(`</ul></div>`);
-            }
-        }
-        
-        win.document.write(`</div>`);
-    });
-    
-    win.document.write(`
-        <div class="footer">👨‍🏫 إعداد: المهندس / أشرف موسى<br>📞 01110547129 - 01100429783</div>
-        </body></html>
-    `);
-    win.document.close();
-}
-
-/* ============================================================
-   إظهار أدوات المعلم بمفتاح سري (Ctrl + Shift + T)
-   ============================================================ */
+// ============================================================
+// ✅ إظهار أدوات المعلم بمفتاح سري (Ctrl + Shift + T)
+// ============================================================
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.shiftKey && (e.key === 'T' || e.key === 't' || e.code === 'KeyT')) {
         e.preventDefault();
