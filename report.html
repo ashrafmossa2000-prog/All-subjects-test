@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 تقرير الأخطاء - للمعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-right: 5px solid #667eea;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e0e0e0;
+            font-size: 1em;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row span { color: #666; font-weight: 600; }
+        .info-row strong { color: #333; font-weight: 800; }
+        .grade-badge {
+            display: block;
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            font-size: 1.4em;
+            font-weight: 900;
+            margin-top: 15px;
+        }
+        .send-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: 900;
+            font-family: inherit;
+            cursor: pointer;
+            margin: 20px 0;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
+            transition: all 0.3s;
+        }
+        .send-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.5);
+        }
+        .send-btn:active { transform: translateY(0); }
+        .question-card {
+            background: #fff;
+            border: 2px solid #fee;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-right: 5px solid #ef4444;
+        }
+        .question-number {
+            display: inline-block;
+            background: #ef4444;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.85em;
+            margin-bottom: 12px;
+        }
+        .question-text {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+        .answer-box {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin: 8px 0;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .wrong {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        .correct {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        .answer-label {
+            font-weight: 800;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 1.2em;
+            color: #10b981;
+            font-weight: 800;
+            background: #ecfdf5;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            font-size: 0.9em;
+            line-height: 1.8;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px 20px;
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="loading">⏳ جاري تحميل التقرير...</div>
+    </div>
+
+    <script>
+        // ✅ قراءة البيانات من الرابط
+        function getReportData() {
+            const hash = window.location.hash;
+            if (!hash || !hash.includes('data=')) {
+                return null;
+            }
+            try {
+                const encoded = hash.split('data=')[1];
+                const decoded = decodeURIComponent(escape(atob(encoded)));
+                return JSON.parse(decoded);
+            } catch (e) {
+                console.error('خطأ في قراءة البيانات:', e);
+                return null;
+            }
+        }
+
+        // ✅ عرض التقرير
+        function renderReport(data) {
+            const container = document.getElementById('container');
+            
+            if (!data) {
+                container.innerHTML = `
+                    <h1>❌ خطأ في التقرير</h1>
+                    <p style="text-align:center; padding: 20px; color: #ef4444; font-weight: 700;">
+                        لم يتم العثور على بيانات التقرير.<br>
+                        تأكد من أن الرابط كامل ولم يتم قطعه.
+                    </p>
+                    <div class="footer">
+                        👨‍🏫 إعداد: المهندس / أشرف موسى<br>
+                        📞 01110547129 - 01100429783
+                    </div>
+                `;
+                return;
+            }
+
+            let gradeText = '';
+            if (data.percent >= 90) gradeText = '🌟 ممتاز';
+            else if (data.percent >= 75) gradeText = '👍 جيد جداً';
+            else if (data.percent >= 50) gradeText = '📚 جيد';
+            else gradeText = '💪 يحتاج لمزيد من المذاكرة';
+
+            let html = `
+                <h1>📋 تقرير اختبار الطالب</h1>
+                <p class="subtitle">👨‍🏫 للمعلم - المهندس / أشرف موسى</p>
+
+                <div class="info-card">
+                    <div class="info-row"><span>👤 الطالب:</span><strong>${data.student}</strong></div>
+                    <div class="info-row"><span>📱 رقم الواتساب:</span><strong style="direction:ltr;">${data.phone}</strong></div>
+                    <div class="info-row"><span>📚 الصف:</span><strong>${data.grade}</strong></div>
+                    <div class="info-row"><span>📖 الوحدة:</span><strong>${data.unit}</strong></div>
+                    <div class="info-row"><span>📝 الدرس:</span><strong>${data.lesson}</strong></div>
+                    <div class="info-row"><span>🏆 الدرجة:</span><strong>${data.score} من ${data.total}</strong></div>
+                    <div class="info-row"><span>📈 النسبة:</span><strong>${data.percent}%</strong></div>
+                    <div class="info-row"><span>⏱️ الوقت المستغرق:</span><strong>${data.time}</strong></div>
+                    <div class="info-row"><span>🕐 التاريخ:</span><strong>${data.date}</strong></div>
+                    <div class="grade-badge">${gradeText}</div>
+                </div>
+
+                <button class="send-btn" onclick="sendToStudent()">
+                    📱 إرسال الأخطاء للطالب على واتساب
+                </button>
+            `;
+
+            // عرض الأخطاء
+            if (data.wrongQuestions && data.wrongQuestions.length > 0) {
+                html += `<h2 style="color:#ef4444; margin:25px 0 15px; text-align:center; font-weight: 900;">❌ الأخطاء (${data.wrongQuestions.length})</h2>`;
+                
+                data.wrongQuestions.forEach((q, i) => {
+                    html += `
+                        <div class="question-card">
+                            <span class="question-number">سؤال ${i + 1}</span>
+                            <div class="question-text">${q.question}</div>
+                            <div class="answer-box wrong">
+                                <span class="answer-label">❌ إجابة الطالب:</span>
+                                ${q.studentAnswer}
+                            </div>
+                            <div class="answer-box correct">
+                                <span class="answer-label">✅ الإجابة الصحيحة:</span>
+                                ${q.correctAnswer}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `<div class="empty-state">🎉 ممتاز! لا توجد أخطاء</div>`;
+            }
+
+            html += `
+                <div class="footer">
+                    👨‍🏫 إعداد: المهندس / أشرف موسى<br>
+                    📞 01110547129 - 01100429783
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // ✅ إرسال الأخطاء للطالب (من جهاز المعلم)
+        function sendToStudent() {
+            const data = getReportData();
+            if (!data) {
+                alert('❌ لا توجد بيانات');
+                return;
+            }
+
+            let message = `📋 تصحيح الأخطاء
+
+📚 الصف: ${data.grade}
+📖 الوحدة: ${data.unit}
+📝 الدرس: ${data.lesson}
+
+👤 الطالب: ${data.student}
+
+🏆 الدرجة: ${data.score} من ${data.total}
+📈 النسبة: ${data.percent}%
+⏱️ الوقت المستغرق: ${data.time}
+
+━━━━━━━━━━━━━━━━━━━
+
+`;
+
+            if (data.wrongQuestions && data.wrongQuestions.length > 0) {
+                message += `❌ الأخطاء وتصحيحها:\n\n`;
+                
+                data.wrongQuestions.forEach((q, i) => {
+                    message += `سؤال ${i + 1}:\n`;
+                    message += `📝 ${q.question}\n\n`;
+                    message += `❌ إجابتك: ${q.studentAnswer}\n`;
+                    message += `✅ الإجابة الصحيحة: ${q.correctAnswer}\n\n`;
+                    message += `━━━━━━━━━━━━━━━━━━━\n\n`;
+                });
+            } else {
+                message += `🎉 ممتاز! لا توجد أخطاء\n\n`;
+            }
+
+            message += `🕐 التاريخ: ${data.date}\n\n`;
+            message += `👨‍🏫 إعداد: المهندس / أشرف موسى\n\n`;
+            message += `📞 01110547129 - 01100429783`;
+
+            // ✅ فتح واتساب على رقم الطالب
+            window.location.href = 'https://wa.me/' + data.phone + '?text=' + encodeURIComponent(message);
+        }
+
+        // ✅ عرض التقرير عند التحميل
+        window.addEventListener('DOMContentLoaded', function() {
+            const data = getReportData();
+            renderReport(data);
+        });
+    </script>
+</body>
+</html>
