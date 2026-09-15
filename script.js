@@ -595,7 +595,9 @@ function getCorrectScore() {
 }
 
 /* ============================================================
-   ✅ دالة بناء رابط التقرير (مع تقليل حجم البيانات)
+   ✅ دالة بناء رابط التقرير (مع تقليل حجم البيانات بشدة)
+   - نرسل فقط أول 5 أخطاء في الرابط لضمان عمل الرابط في واتساب
+   - باقي الأخطاء تُرسل عبر رسالة واتساب النصية
    ============================================================ */
 function buildReportUrl() {
     const name = studentName || 'طالب';
@@ -603,7 +605,10 @@ function buildReportUrl() {
     const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
     const elapsedTime = getElapsedTime();
 
-    // ✅ تقليل حجم البيانات بشكل كبير
+    // ✅ نأخذ فقط أول 5 أخطاء لتقليل حجم الرابط
+    const MAX_WRONG_IN_URL = 5;
+    const wrongForUrl = wrongQuestions.slice(0, MAX_WRONG_IN_URL);
+
     const reportData = {
         student: name,
         phone: studentPhoneNumber,
@@ -616,10 +621,11 @@ function buildReportUrl() {
         percent: result.percent,
         time: elapsedTime,
         date: new Date().toLocaleString('ar-EG'),
-        wrongQuestions: wrongQuestions.map(q => ({
-            question: String(q.question || '').substring(0, 120),
-            studentAnswer: String(q.studentAnswer || '').substring(0, 60),
-            correctAnswer: String(q.correctAnswer || '').substring(0, 60),
+        totalWrong: wrongQuestions.length,
+        wrongQuestions: wrongForUrl.map(q => ({
+            question: String(q.question || '').substring(0, 80),
+            studentAnswer: String(q.studentAnswer || '').substring(0, 40),
+            correctAnswer: String(q.correctAnswer || '').substring(0, 40),
             isEssay: q.isEssay || false
         }))
     };
@@ -636,10 +642,9 @@ function buildReportUrl() {
         encodedData = '';
     }
 
-    // ✅ استخدام ? بدلاً من # لأن واتساب يحتفظ بالـ query string
     const reportUrl = REPORT_PAGE_URL + '?data=' + encodedData;
 
-    console.log('🔗 طول رابط التقرير:', reportUrl.length);
+    console.log('🔗 طول رابط التقرير:', reportUrl.length, '| عدد الأخطاء الكلي:', wrongQuestions.length);
 
     return { reportUrl, encodedData, reportData };
 }

@@ -210,8 +210,6 @@
     }
 
     function addDataBox(title, data) {
-        // لن تُستخدم في وضع العرض العادي
-        // تظهر فقط عند الخطأ
         const wrapper = document.createElement('div');
         wrapper.className = 'status info';
         wrapper.innerHTML = '<strong>' + title + '</strong>' + '<div class="data-box"></div>';
@@ -352,11 +350,16 @@
 
             if (Array.isArray(data.wrongQuestions) && data.wrongQuestions.length > 0) {
 
+                const totalWrong = data.totalWrong || data.wrongQuestions.length;
+                const shownWrong = data.wrongQuestions.length;
+
                 let wrongHtml =
                     '<div class="report-card">' +
                     '<h3 style="color:#ef4444;">' +
-                    '❌ الأخطاء: ' +
-                    data.wrongQuestions.length +
+                    '❌ الأخطاء: ' + totalWrong +
+                    (shownWrong < totalWrong 
+                        ? ' <span style="font-size:0.7em;color:#666;">(يظهر ' + shownWrong + ' فقط في الرابط)</span>' 
+                        : '') +
                     '</h3>';
 
                 data.wrongQuestions.forEach(function (q, index) {
@@ -381,6 +384,16 @@
                 });
 
                 wrongHtml += '</div>';
+
+                // ✅ إضافة تنبيه إذا كان هناك أخطاء أكثر
+                if (shownWrong < totalWrong) {
+                    wrongHtml +=
+                        '<div class="status warning" style="margin-top:15px;">' +
+                        '⚠️ يوجد ' + (totalWrong - shownWrong) + ' خطأ إضافي لم يظهر هنا بسبب حجم الرابط.<br>' +
+                        'اطلب من المعلم إرسال الأخطاء كاملة عبر واتساب.' +
+                        '</div>';
+                }
+
                 wrongContainer.innerHTML = wrongHtml;
 
             } else {
