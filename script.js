@@ -595,8 +595,8 @@ function getCorrectScore() {
 }
 
 /* ============================================================
-   ✅ دالة بناء رابط التقرير (مع تقليل حجم البيانات بشدة)
-   - نرسل فقط أول 5 أخطاء في الرابط لضمان عمل الرابط في واتساب
+   ✅ دالة بناء رابط التقرير
+   - نرسل أول 15 خطأ في الرابط (زيادة من 5 إلى 15)
    - باقي الأخطاء تُرسل عبر رسالة واتساب النصية
    ============================================================ */
 function buildReportUrl() {
@@ -605,8 +605,8 @@ function buildReportUrl() {
     const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
     const elapsedTime = getElapsedTime();
 
-    // ✅ نأخذ فقط أول 5 أخطاء لتقليل حجم الرابط
-    const MAX_WRONG_IN_URL = 5;
+    // ✅ عدد الأخطاء المرسلة في الرابط (تمت زيادته إلى 15)
+    const MAX_WRONG_IN_URL = 15;
     const wrongForUrl = wrongQuestions.slice(0, MAX_WRONG_IN_URL);
 
     const reportData = {
@@ -623,9 +623,9 @@ function buildReportUrl() {
         date: new Date().toLocaleString('ar-EG'),
         totalWrong: wrongQuestions.length,
         wrongQuestions: wrongForUrl.map(q => ({
-            question: String(q.question || '').substring(0, 80),
-            studentAnswer: String(q.studentAnswer || '').substring(0, 40),
-            correctAnswer: String(q.correctAnswer || '').substring(0, 40),
+            question: String(q.question || '').substring(0, 100),
+            studentAnswer: String(q.studentAnswer || '').substring(0, 50),
+            correctAnswer: String(q.correctAnswer || '').substring(0, 50),
             isEssay: q.isEssay || false
         }))
     };
@@ -644,7 +644,7 @@ function buildReportUrl() {
 
     const reportUrl = REPORT_PAGE_URL + '?data=' + encodedData;
 
-    console.log('🔗 طول رابط التقرير:', reportUrl.length, '| عدد الأخطاء الكلي:', wrongQuestions.length);
+    console.log('🔗 طول رابط التقرير:', reportUrl.length, '| عدد الأخطاء الكلي:', wrongQuestions.length, '| عدد الأخطاء في الرابط:', wrongForUrl.length);
 
     return { reportUrl, encodedData, reportData };
 }

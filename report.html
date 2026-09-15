@@ -108,6 +108,26 @@
             border-top: 1px solid #ddd;
         }
 
+        /* ✅ زر طلب الأخطاء من المعلم */
+        .request-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.05em;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .request-btn:hover {
+            transform: scale(1.03);
+            background: #1faa52;
+        }
+
         @media (max-width: 600px) {
             body { padding: 10px; }
             .container { padding: 18px; }
@@ -207,14 +227,6 @@
         if (type === 'error') {
             diagnostics.style.display = 'block';
         }
-    }
-
-    function addDataBox(title, data) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'status info';
-        wrapper.innerHTML = '<strong>' + title + '</strong>' + '<div class="data-box"></div>';
-        wrapper.querySelector('.data-box').textContent = data;
-        diagnostics.appendChild(wrapper);
     }
 
     // =========================================================
@@ -385,12 +397,32 @@
 
                 wrongHtml += '</div>';
 
-                // ✅ إضافة تنبيه إذا كان هناك أخطاء أكثر
+                // ✅ إضافة تنبيه + زر طلب الأخطاء من المعلم
                 if (shownWrong < totalWrong) {
+                    const teacherPhone = '201100429783';
+                    const studentNameVal = data.student || 'طالب';
+                    const subjectVal = data.subject || '';
+                    const gradeVal = data.grade || '';
+                    const lessonVal = data.lesson || '';
+                    const remainingCount = totalWrong - shownWrong;
+
+                    const requestMessage =
+                        'السلام عليكم ورحمة الله وبركاته\n\n' +
+                        'أنا الطالب: ' + studentNameVal + '\n' +
+                        'المادة: ' + subjectVal + '\n' +
+                        'الصف: ' + gradeVal + '\n' +
+                        'الدرس: ' + lessonVal + '\n\n' +
+                        'أرجو إرسال باقي الأخطاء (' + remainingCount + ' خطأ) كاملة.\n\n' +
+                        'شكراً جزيلاً 🌹';
+
+                    const waLink = 'https://wa.me/' + teacherPhone + '?text=' + encodeURIComponent(requestMessage);
+
                     wrongHtml +=
-                        '<div class="status warning" style="margin-top:15px;">' +
-                        '⚠️ يوجد ' + (totalWrong - shownWrong) + ' خطأ إضافي لم يظهر هنا بسبب حجم الرابط.<br>' +
-                        'اطلب من المعلم إرسال الأخطاء كاملة عبر واتساب.' +
+                        '<div class="status warning" style="margin-top:15px;text-align:center;">' +
+                        '⚠️ يوجد <strong>' + remainingCount + '</strong> خطأ إضافي لم يظهر هنا بسبب حجم الرابط.<br>' +
+                        'اضغط الزر التالي لطلب باقي الأخطاء من المعلم عبر واتساب:' +
+                        '<br>' +
+                        '<a href="' + waLink + '" target="_blank" class="request-btn">📩 اطلب باقي الأخطاء من المعلم</a>' +
                         '</div>';
                 }
 
