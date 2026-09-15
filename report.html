@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -17,9 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -54,29 +51,10 @@
             word-break: break-word;
         }
 
-        .success {
-            background: #ecfdf5;
-            border: 2px solid #10b981;
-            color: #065f46;
-        }
-
-        .error {
-            background: #fef2f2;
-            border: 2px solid #ef4444;
-            color: #991b1b;
-        }
-
-        .info {
-            background: #eff6ff;
-            border: 2px solid #3b82f6;
-            color: #1e40af;
-        }
-
-        .warning {
-            background: #fffbeb;
-            border: 2px solid #f59e0b;
-            color: #92400e;
-        }
+        .success { background: #ecfdf5; border: 2px solid #10b981; color: #065f46; }
+        .error   { background: #fef2f2; border: 2px solid #ef4444; color: #991b1b; }
+        .info    { background: #eff6ff; border: 2px solid #3b82f6; color: #1e40af; }
+        .warning { background: #fffbeb; border: 2px solid #f59e0b; color: #92400e; }
 
         .data-box {
             background: #f8f9fa;
@@ -94,9 +72,7 @@
             font-size: 13px;
         }
 
-        .report {
-            display: none;
-        }
+        .report { display: none; }
 
         .report-card {
             background: #f8f9fa;
@@ -114,19 +90,10 @@
             border-bottom: 1px dashed #ddd;
         }
 
-        .row:last-child {
-            border-bottom: none;
-        }
+        .row:last-child { border-bottom: none; }
 
-        .label {
-            font-weight: 700;
-            color: #666;
-        }
-
-        .value {
-            font-weight: 800;
-            color: #222;
-        }
+        .label { font-weight: 700; color: #666; }
+        .value { font-weight: 800; color: #222; }
 
         .footer {
             text-align: center;
@@ -150,24 +117,12 @@
             cursor: pointer;
         }
 
-        button:hover {
-            opacity: 0.9;
-        }
+        button:hover { opacity: 0.9; }
 
         @media (max-width: 600px) {
-
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 18px;
-            }
-
-            .row {
-                flex-direction: column;
-                gap: 3px;
-            }
+            body { padding: 10px; }
+            .container { padding: 18px; }
+            .row { flex-direction: column; gap: 3px; }
         }
     </style>
 </head>
@@ -253,40 +208,68 @@
     // أدوات التشخيص
     // =========================================================
 
-    const diagnostics =
-        document.getElementById('diagnostics');
-
+    const diagnostics = document.getElementById('diagnostics');
 
     function addStatus(type, title, message) {
-
         const div = document.createElement('div');
-
         div.className = 'status ' + type;
-
-        div.innerHTML =
-            '<strong>' + title + '</strong><br>' +
-            message;
-
+        div.innerHTML = '<strong>' + title + '</strong><br>' + message;
         diagnostics.appendChild(div);
     }
 
-
     function addDataBox(title, data) {
-
         const wrapper = document.createElement('div');
-
         wrapper.className = 'status info';
-
-        wrapper.innerHTML =
-            '<strong>' + title + '</strong>' +
-            '<div class="data-box"></div>';
-
-        wrapper.querySelector('.data-box').textContent =
-            data;
-
+        wrapper.innerHTML = '<strong>' + title + '</strong>' + '<div class="data-box"></div>';
+        wrapper.querySelector('.data-box').textContent = data;
         diagnostics.appendChild(wrapper);
     }
 
+    // =========================================================
+    // حماية النصوص
+    // =========================================================
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // =========================================================
+    // ✅ استخراج البيانات من الرابط
+    //    يدعم ?data=  و  #data=
+    // =========================================================
+
+    function extractEncodedData() {
+        // 1) البحث في query string أولاً (الأكثر موثوقية مع واتساب)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const fromQuery = params.get('data');
+            if (fromQuery) {
+                return { encoded: fromQuery, source: 'query string (?data=)' };
+            }
+        } catch (e) {
+            console.warn('URLSearchParams error:', e);
+        }
+
+        // 2) البحث في hash
+        const hash = window.location.hash;
+        if (hash && hash.includes('data=')) {
+            const start = hash.indexOf('data=') + 5;
+            const fromHash = hash.substring(start);
+            if (fromHash) {
+                return { encoded: fromHash, source: 'hash (#data=)' };
+            }
+        }
+
+        return { encoded: null, source: null };
+    }
 
     // =========================================================
     // قراءة البيانات
@@ -308,124 +291,53 @@
                 'تم قراءة الرابط من الصفحة.'
             );
 
-            addDataBox(
-                'الرابط الكامل:',
-                fullUrl
-            );
-
+            addDataBox('الرابط الكامل:', fullUrl);
 
             // -------------------------------------------------
-            // 2. فحص HASH
+            // 2. فحص مصادر البيانات
             // -------------------------------------------------
-
-            const hash = window.location.hash;
 
             addStatus(
                 'info',
-                '2️⃣ فحص HASH',
-                'طول HASH = ' + hash.length
+                '2️⃣ فحص الرابط',
+                'طول search = ' + window.location.search.length +
+                '<br>طول hash = ' + window.location.hash.length
             );
 
-            addDataBox(
-                'HASH:',
-                hash
-            );
-
-
             // -------------------------------------------------
-            // 3. هل يوجد data= ؟
+            // 3. استخراج البيانات
             // -------------------------------------------------
 
-            if (!hash) {
+            const { encoded, source } = extractEncodedData();
 
+            if (!encoded) {
                 addStatus(
                     'error',
-                    '❌ المشكلة رقم 1',
-                    'window.location.hash فارغ تمامًا.'
+                    '❌ لا توجد بيانات في الرابط',
+                    'لم يتم العثور على data في query string ولا في hash.<br>' +
+                    'تأكد من فتح الرابط كاملاً كما وصل من واتساب.'
                 );
-
                 return;
             }
-
-
-            if (!hash.includes('data=')) {
-
-                addStatus(
-                    'error',
-                    '❌ المشكلة رقم 2',
-                    'الرابط وصل للصفحة، ولكن لا يوجد بداخله data='
-                );
-
-                return;
-            }
-
 
             addStatus(
                 'success',
-                '✅ data= موجود',
-                'تم العثور على بيانات التقرير داخل الرابط.'
+                '✅ تم العثور على البيانات',
+                'المصدر: ' + source + '<br>طول البيانات = ' + encoded.length
             );
 
-
             // -------------------------------------------------
-            // 4. استخراج البيانات
+            // 4. فحص LZString
             // -------------------------------------------------
-
-            const dataStart =
-                hash.indexOf('data=') + 5;
-
-            const encoded =
-                hash.substring(dataStart);
-
-
-            addStatus(
-                'info',
-                '3️⃣ البيانات المضغوطة',
-                'طول البيانات = ' + encoded.length
-            );
-
-
-            if (!encoded) {
-
-                addStatus(
-                    'error',
-                    '❌ المشكلة رقم 3',
-                    'data= موجود ولكن البيانات بعده فارغة.'
-                );
-
-                return;
-            }
-
-
-            addDataBox(
-                'بداية البيانات المضغوطة:',
-                encoded.substring(0, 500) +
-                (encoded.length > 500 ? '\n...' : '')
-            );
-
-
-            // -------------------------------------------------
-            // 5. فحص LZString
-            // -------------------------------------------------
-
-            addStatus(
-                'info',
-                '4️⃣ فحص LZString',
-                'typeof LZString = ' + typeof LZString
-            );
-
 
             if (typeof LZString === 'undefined') {
-
                 addStatus(
                     'error',
-                    '❌ المشكلة رقم 4',
-                    'مكتبة LZString لم يتم تحميلها.'
+                    '❌ مكتبة LZString غير محملة',
+                    'تأكد من اتصالك بالإنترنت.'
                 );
-
                 return;
             }
-
 
             addStatus(
                 'success',
@@ -433,82 +345,65 @@
                 'المكتبة تم تحميلها بنجاح.'
             );
 
-
             // -------------------------------------------------
-            // 6. فك الضغط
+            // 5. فك الضغط
             // -------------------------------------------------
 
             let decoded;
 
             try {
-
-                decoded =
-                    LZString.decompressFromEncodedURIComponent(
-                        encoded
-                    );
-
+                decoded = LZString.decompressFromEncodedURIComponent(encoded);
             } catch (decodeError) {
-
                 addStatus(
                     'error',
-                    '❌ المشكلة رقم 5',
-                    'حدث خطأ أثناء فك ضغط LZString:<br>' +
+                    '❌ خطأ أثناء فك ضغط LZString',
                     String(decodeError)
                 );
-
                 return;
             }
-
 
             if (!decoded) {
-
-                addStatus(
-                    'error',
-                    '❌ المشكلة رقم 5',
-                    'LZString موجودة، ولكنها لم تستطع فك البيانات.<br>' +
-                    'هذا يعني أن البيانات التي تم ضغطها في script.js لا تتطابق مع طريقة فك الضغط هنا.'
-                );
-
-                return;
+                // محاولة بديلة: بعض الإصدارات تفك بشكل مختلف
+                try {
+                    decoded = LZString.decompress(encoded);
+                } catch (e) { /* تجاهل */ }
             }
 
+            if (!decoded) {
+                addStatus(
+                    'error',
+                    '❌ فشل فك ضغط البيانات',
+                    'LZString موجودة، لكنها لم تستطع فك البيانات.<br>' +
+                    'هذا يعني أن البيانات التي تم ضغطها في script.js ' +
+                    'لا تتطابق مع طريقة فك الضغط هنا.'
+                );
+                return;
+            }
 
             addStatus(
                 'success',
                 '✅ تم فك ضغط البيانات',
-                'طول البيانات بعد فك الضغط = ' +
-                decoded.length
+                'طول البيانات بعد فك الضغط = ' + decoded.length
             );
 
-
-            addDataBox(
-                'البيانات بعد فك الضغط:',
-                decoded
-            );
-
+            addDataBox('البيانات بعد فك الضغط:', decoded);
 
             // -------------------------------------------------
-            // 7. JSON
+            // 6. JSON
             // -------------------------------------------------
 
             let data;
 
             try {
-
                 data = JSON.parse(decoded);
-
             } catch (jsonError) {
-
                 addStatus(
                     'error',
-                    '❌ المشكلة رقم 6',
-                    'فك الضغط نجح، لكن JSON غير صالح.<br><br>' +
-                    String(jsonError)
+                    '❌ JSON غير صالح',
+                    'فك الضغط نجح، لكن JSON غير صالح.<br><br>' + String(jsonError)
                 );
-
                 return;
             }
-
 
             addStatus(
                 'success',
@@ -516,53 +411,27 @@
                 'تم تحويل البيانات إلى كائن JavaScript بنجاح.'
             );
 
-
             // -------------------------------------------------
-            // 8. عرض البيانات
-            // -------------------------------------------------
-
-            document.getElementById('student').textContent =
-                data.student || '';
-
-            document.getElementById('phone').textContent =
-                data.phone || '';
-
-            document.getElementById('grade').textContent =
-                data.grade || '';
-
-            document.getElementById('unit').textContent =
-                data.unit || '';
-
-            document.getElementById('lesson').textContent =
-                data.lesson || '';
-
-            document.getElementById('score').textContent =
-                (data.score ?? 0) +
-                ' من ' +
-                (data.total ?? 0);
-
-            document.getElementById('percent').textContent =
-                (data.percent ?? 0) + '%';
-
-            document.getElementById('time').textContent =
-                data.time || '';
-
-            document.getElementById('date').textContent =
-                data.date || '';
-
-
-            // -------------------------------------------------
-            // 9. الأسئلة الخاطئة
+            // 7. عرض البيانات
             // -------------------------------------------------
 
-            const wrongContainer =
-                document.getElementById('wrongQuestions');
+            document.getElementById('student').textContent = data.student || '';
+            document.getElementById('phone').textContent   = data.phone   || '';
+            document.getElementById('grade').textContent   = data.grade   || '';
+            document.getElementById('unit').textContent    = data.unit    || '';
+            document.getElementById('lesson').textContent  = data.lesson  || '';
+            document.getElementById('score').textContent   = (data.score ?? 0) + ' من ' + (data.total ?? 0);
+            document.getElementById('percent').textContent = (data.percent ?? 0) + '%';
+            document.getElementById('time').textContent    = data.time    || '';
+            document.getElementById('date').textContent    = data.date    || '';
 
+            // -------------------------------------------------
+            // 8. الأسئلة الخاطئة
+            // -------------------------------------------------
 
-            if (
-                Array.isArray(data.wrongQuestions) &&
-                data.wrongQuestions.length > 0
-            ) {
+            const wrongContainer = document.getElementById('wrongQuestions');
+
+            if (Array.isArray(data.wrongQuestions) && data.wrongQuestions.length > 0) {
 
                 let wrongHtml =
                     '<div class="report-card">' +
@@ -571,67 +440,49 @@
                     data.wrongQuestions.length +
                     '</h3>';
 
+                data.wrongQuestions.forEach(function (q, index) {
+                    wrongHtml +=
+                        '<div style="' +
+                        'margin-top:15px;' +
+                        'padding:15px;' +
+                        'background:#fff;' +
+                        'border-radius:10px;' +
+                        'border-right:5px solid #ef4444;' +
+                        '">' +
 
-                data.wrongQuestions.forEach(
-                    function (q, index) {
+                        '<strong>سؤال ' + (index + 1) + '</strong><br><br>' +
 
-                        wrongHtml +=
-                            '<div style="' +
-                            'margin-top:15px;' +
-                            'padding:15px;' +
-                            'background:#fff;' +
-                            'border-radius:10px;' +
-                            'border-right:5px solid #ef4444;' +
-                            '">' +
+                        '📝 ' + escapeHtml(q.question) + '<br><br>' +
 
-                            '<strong>سؤال ' +
-                            (index + 1) +
-                            '</strong><br><br>' +
+                        '❌ إجابة الطالب: ' + escapeHtml(q.studentAnswer) + '<br><br>' +
 
-                            '📝 ' +
-                            escapeHtml(q.question) +
-                            '<br><br>' +
+                        '✅ الإجابة الصحيحة: ' + escapeHtml(q.correctAnswer) +
 
-                            '❌ إجابة الطالب: ' +
-                            escapeHtml(q.studentAnswer) +
-                            '<br><br>' +
-
-                            '✅ الإجابة الصحيحة: ' +
-                            escapeHtml(q.correctAnswer) +
-
-                            '</div>';
-                    }
-                );
-
+                        '</div>';
+                });
 
                 wrongHtml += '</div>';
 
-                wrongContainer.innerHTML =
-                    wrongHtml;
+                wrongContainer.innerHTML = wrongHtml;
 
             } else {
-
                 wrongContainer.innerHTML =
                     '<div class="status success">' +
                     '🎉 لا توجد أخطاء.' +
                     '</div>';
             }
 
-
             // -------------------------------------------------
             // نجاح كامل
             // -------------------------------------------------
 
-            document.getElementById('report').style.display =
-                'block';
-
+            document.getElementById('report').style.display = 'block';
 
             addStatus(
                 'success',
                 '🎉 نجح الاختبار بالكامل',
                 'تم قراءة التقرير وفك ضغطه وتحويله إلى JSON بنجاح.'
             );
-
 
         } catch (error) {
 
@@ -641,51 +492,19 @@
                 String(error)
             );
 
-            console.error(
-                'REPORT ERROR:',
-                error
-            );
+            console.error('REPORT ERROR:', error);
         }
     }
-
-
-    // =========================================================
-    // حماية النصوص
-    // =========================================================
-
-    function escapeHtml(value) {
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return '';
-        }
-
-        return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
 
     // =========================================================
     // بدء التشخيص
     // =========================================================
 
-    window.addEventListener(
-        'DOMContentLoaded',
-        function () {
-
-            diagnoseReport();
-
-        }
-    );
+    window.addEventListener('DOMContentLoaded', function () {
+        diagnoseReport();
+    });
 
 </script>
 
 </body>
 </html>
-```

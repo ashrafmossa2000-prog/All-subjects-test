@@ -30,6 +30,7 @@ const validCodes = {
 };
 
 const REPORT_PAGE_URL = 'https://ashrafmossa2000-prog.github.io/-/report.html';
+
 // عناصر شاشة الدخول
 const loginScreen = document.getElementById('loginScreen');
 const startScreen = document.getElementById('startScreen');
@@ -40,7 +41,7 @@ const loginCode = document.getElementById('loginCode');
 const loginError = document.getElementById('loginError');
 
 let studentPhoneNumber = '';
-let currentSubject = 'science'; // ✅ المادة الافتراضية
+let currentSubject = 'science';
 
 /* ============================================================
    استرجاع البيانات المحفوظة
@@ -58,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loginStudentName.value = savedName;
     }
     
-    // ✅ تفعيل أدوات المعلم بالضغط 5 مرات
     const resultScreen = document.getElementById('resultScreen');
     if (resultScreen) {
         let clickCount = 0;
@@ -133,7 +133,7 @@ let examStartTime = null;
 let examEndTime = null;
 
 /* ============================================================
-   ✅ التعامل مع قائمة المواد المنسدلة (subjectSelect)
+   التعامل مع قائمة المواد المنسدلة
    ============================================================ */
 const subjectSelect = document.getElementById('subjectSelect');
 
@@ -142,22 +142,18 @@ if (subjectSelect) {
         currentSubject = this.value;
         console.log('📚 تم اختيار المادة:', currentSubject);
         
-        // إعادة تعيين القوائم المنسدلة
         const unitSelect = document.getElementById('unitSelect');
         const lessonSelect = document.getElementById('lessonSelect');
         unitSelect.innerHTML = '<option value="">-- اختر الوحدة --</option>';
         lessonSelect.innerHTML = '<option value="">-- اختر الدرس --</option>';
         
-        // إذا كان الصف مختاراً، نعيد تحميل الوحدات
         const gradeSelect = document.getElementById('gradeSelect');
         if (gradeSelect.value) {
             loadUnitsForSubject(currentSubject, gradeSelect.value);
         }
     });
 }
-/* ============================================================
-   ✅ دالة تحميل الوحدات حسب المادة والصف
-   ============================================================ */
+
 function loadUnitsForSubject(subject, grade) {
     const unitSelect = document.getElementById('unitSelect');
     const lessonSelect = document.getElementById('lessonSelect');
@@ -165,7 +161,6 @@ function loadUnitsForSubject(subject, grade) {
     unitSelect.innerHTML = '<option value="">-- اختر الوحدة --</option>';
     lessonSelect.innerHTML = '<option value="">-- اختر الدرس --</option>';
     
-    // التحقق من وجود البيانات
     if (!questionsData[subject]) {
         console.warn('⚠️ لا توجد بيانات للمادة:', subject);
         return;
@@ -185,17 +180,11 @@ function loadUnitsForSubject(subject, grade) {
     });
 }
 
-/* ============================================================
-   تحميل الوحدات عند اختيار الصف (معدّلة لدعم المواد)
-   ============================================================ */
 document.getElementById('gradeSelect').addEventListener('change', function() {
     const grade = this.value;
     loadUnitsForSubject(currentSubject, grade);
 });
 
-/* ============================================================
-   تحميل الدروس عند اختيار الوحدة (معدّلة لدعم المواد)
-   ============================================================ */
 document.getElementById('unitSelect').addEventListener('change', function() {
     const grade = document.getElementById('gradeSelect').value;
     const unit = this.value;
@@ -217,7 +206,7 @@ document.getElementById('unitSelect').addEventListener('change', function() {
 });
 
 /* ============================================================
-   بدء الاختبار العادي (معدّلة لدعم المواد)
+   بدء الاختبار العادي
    ============================================================ */
 document.getElementById('startBtn').addEventListener('click', function() {
     const name = document.getElementById('studentName').value.trim();
@@ -331,7 +320,6 @@ function showQuestion() {
     const nextBtn = document.getElementById('nextBtn');
     nextBtn.style.display = 'none';
     
-    // الأسئلة المقالية
     if (question.type === 'explain' || question.type === 'definition' || question.type === 'concept') {
         const textarea = document.createElement('textarea');
         textarea.id = 'essayAnswer';
@@ -346,7 +334,6 @@ function showQuestion() {
         return;
     }
     
-    // الأسئلة الاختيارية
     const options = question.options || [];
     options.forEach((option, index) => {
         const button = document.createElement('button');
@@ -558,7 +545,6 @@ function getUnitAndLessonInfo() {
     let unitName = unitSelect ? unitSelect.options[unitSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
     let lessonName = lessonSelect ? lessonSelect.options[lessonSelect.selectedIndex]?.text || 'غير محدد' : 'غير محدد';
     
-    // ✅ إضافة اسم المادة
     const subjectNames = {
         science: 'العلوم',
         arabic: 'اللغة العربية',
@@ -609,15 +595,15 @@ function getCorrectScore() {
 }
 
 /* ============================================================
-   إرسال النتيجة (مع ضغط البيانات)
+   ✅ دالة بناء رابط التقرير (مع تقليل حجم البيانات)
    ============================================================ */
-function sendAnswers() {
+function buildReportUrl() {
     const name = studentName || 'طالب';
     const result = getCorrectScore();
-    const programName = '🧪 Science Quiz Pro';
     const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
     const elapsedTime = getElapsedTime();
 
+    // ✅ تقليل حجم البيانات بشكل كبير
     const reportData = {
         student: name,
         phone: studentPhoneNumber,
@@ -631,9 +617,9 @@ function sendAnswers() {
         time: elapsedTime,
         date: new Date().toLocaleString('ar-EG'),
         wrongQuestions: wrongQuestions.map(q => ({
-            question: q.question,
-            studentAnswer: q.studentAnswer,
-            correctAnswer: q.correctAnswer,
+            question: String(q.question || '').substring(0, 120),
+            studentAnswer: String(q.studentAnswer || '').substring(0, 60),
+            correctAnswer: String(q.correctAnswer || '').substring(0, 60),
             isEssay: q.isEssay || false
         }))
     };
@@ -650,7 +636,25 @@ function sendAnswers() {
         encodedData = '';
     }
 
-    const reportUrl = REPORT_PAGE_URL + '#data=' + encodedData;
+    // ✅ استخدام ? بدلاً من # لأن واتساب يحتفظ بالـ query string
+    const reportUrl = REPORT_PAGE_URL + '?data=' + encodedData;
+
+    console.log('🔗 طول رابط التقرير:', reportUrl.length);
+
+    return { reportUrl, encodedData, reportData };
+}
+
+/* ============================================================
+   إرسال النتيجة (مع ضغط البيانات)
+   ============================================================ */
+function sendAnswers() {
+    const name = studentName || 'طالب';
+    const result = getCorrectScore();
+    const programName = '🧪 Science Quiz Pro';
+    const { gradeName, unitName, lessonName, subjectName } = getUnitAndLessonInfo();
+    const elapsedTime = getElapsedTime();
+
+    const { reportUrl } = buildReportUrl();
 
     let message =
 `📊 نتيجة اختبار الطالب
