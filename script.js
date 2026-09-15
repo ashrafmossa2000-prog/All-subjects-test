@@ -29,7 +29,7 @@ const validCodes = {
     "AAA025": "أحمد رضا"
 };
 
-const REPORT_PAGE_URL = 'https://ashrafmossa2000-prog.github.io/-/report.html';
+const REPORT_PAGE_URL = 'https://ashrafmossa2000-prog.github.io/All-subjects-test/report.html';
 
 // عناصر شاشة الدخول
 const loginScreen = document.getElementById('loginScreen');
