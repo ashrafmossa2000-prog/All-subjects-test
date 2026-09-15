@@ -606,7 +606,7 @@ function buildReportUrl() {
     const elapsedTime = getElapsedTime();
 
     // ✅ عدد الأخطاء المرسلة في الرابط (تمت زيادته إلى 15)
-    const MAX_WRONG_IN_URL = 15;
+    const MAX_WRONG_IN_URL = 25;
     const wrongForUrl = wrongQuestions.slice(0, MAX_WRONG_IN_URL);
 
     const reportData = {
