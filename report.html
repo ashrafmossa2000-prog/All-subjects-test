@@ -6,201 +6,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>📋 تقرير الأخطاء - للمعلم</title>
+    <title>تشخيص تقرير الاختبار</title>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
         rel="stylesheet"
     >
 
-    <!-- مكتبة LZString لفك ضغط بيانات التقرير -->
+    <!-- LZString -->
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 
     <style>
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            margin: 0;
             padding: 20px;
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
             direction: rtl;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 850px;
+            margin: auto;
             background: white;
             border-radius: 20px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
             text-align: center;
             color: #667eea;
-            font-size: 1.8em;
-            margin-bottom: 10px;
-            font-weight: 900;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
             margin-bottom: 25px;
-            font-weight: 600;
         }
 
-        .info-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border-right: 5px solid #667eea;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            padding: 10px 0;
-            border-bottom: 1px dashed #e0e0e0;
-            font-size: 1em;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-row span {
-            color: #666;
-            font-weight: 600;
-        }
-
-        .info-row strong {
-            color: #333;
-            font-weight: 800;
-            text-align: left;
-            word-break: break-word;
-        }
-
-        .grade-badge {
-            display: block;
-            text-align: center;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 12px;
-            font-size: 1.4em;
-            font-weight: 900;
-            margin-top: 15px;
-        }
-
-        .send-btn {
-            display: block;
-            width: 100%;
+        .status {
             padding: 18px;
-            background: linear-gradient(135deg, #25D366, #128C7E);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.2em;
-            font-weight: 900;
-            font-family: inherit;
-            cursor: pointer;
-            margin: 20px 0;
-            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
-            transition: all 0.3s;
-        }
-
-        .send-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.5);
-        }
-
-        .send-btn:active {
-            transform: translateY(0);
-        }
-
-        .question-card {
-            background: #fff;
-            border: 2px solid #fee;
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 12px;
             margin-bottom: 15px;
-            border-right: 5px solid #ef4444;
-        }
-
-        .question-number {
-            display: inline-block;
-            background: #ef4444;
-            color: white;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 0.85em;
-            margin-bottom: 12px;
-        }
-
-        .question-text {
-            font-size: 1.05em;
             font-weight: 700;
-            color: #333;
-            margin-bottom: 15px;
-            line-height: 1.7;
-        }
-
-        .answer-box {
-            padding: 12px 15px;
-            border-radius: 10px;
-            margin: 8px 0;
-            font-size: 0.95em;
-            line-height: 1.6;
+            line-height: 1.8;
             word-break: break-word;
         }
 
-        .wrong {
-            background: #fef2f2;
-            border: 2px solid #ef4444;
-            color: #991b1b;
-        }
-
-        .correct {
+        .success {
             background: #ecfdf5;
             border: 2px solid #10b981;
             color: #065f46;
         }
 
-        .answer-label {
-            font-weight: 800;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            font-size: 1.2em;
-            color: #10b981;
-            font-weight: 800;
-            background: #ecfdf5;
-            border-radius: 15px;
-            margin: 20px 0;
-        }
-
-        .error-state {
-            text-align: center;
-            padding: 30px 20px;
-            color: #ef4444;
-            font-weight: 700;
+        .error {
             background: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .warning {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .data-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            direction: ltr;
+            text-align: left;
+            max-height: 300px;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .report {
+            display: none;
+        }
+
+        .report-card {
+            background: #f8f9fa;
             border-radius: 15px;
-            margin: 20px 0;
-            line-height: 2;
+            padding: 20px;
+            margin-top: 20px;
+            border-right: 5px solid #667eea;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: 700;
+            color: #666;
+        }
+
+        .value {
+            font-weight: 800;
+            color: #222;
         }
 
         .footer {
@@ -208,44 +133,40 @@
             color: #888;
             margin-top: 25px;
             padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
-            font-size: 0.9em;
-            line-height: 1.8;
+            border-top: 1px solid #ddd;
         }
 
-        .loading {
-            text-align: center;
-            padding: 50px 20px;
-            font-size: 1.2em;
-            color: #667eea;
-            font-weight: 700;
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 12px;
+            background: #667eea;
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
         }
 
         @media (max-width: 600px) {
+
             body {
                 padding: 10px;
             }
 
             .container {
                 padding: 18px;
-                border-radius: 15px;
             }
 
-            h1 {
-                font-size: 1.5em;
-            }
-
-            .info-row {
+            .row {
                 flex-direction: column;
                 gap: 3px;
-            }
-
-            .info-row strong {
-                text-align: right;
-            }
-
-            .send-btn {
-                font-size: 1em;
             }
         }
     </style>
@@ -253,489 +174,518 @@
 
 <body>
 
-    <div class="container" id="container">
-        <div class="loading">
-            ⏳ جاري تحميل التقرير...
+<div class="container">
+
+    <h1>🔍 تشخيص تقرير الاختبار</h1>
+
+    <div id="diagnostics"></div>
+
+    <div id="report" class="report">
+
+        <h2 style="text-align:center;color:#667eea;">
+            📋 بيانات التقرير
+        </h2>
+
+        <div class="report-card">
+
+            <div class="row">
+                <span class="label">👤 الطالب</span>
+                <span class="value" id="student"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">📱 الهاتف</span>
+                <span class="value" id="phone"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">📚 الصف</span>
+                <span class="value" id="grade"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">📖 الوحدة</span>
+                <span class="value" id="unit"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">📝 الدرس</span>
+                <span class="value" id="lesson"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">🏆 الدرجة</span>
+                <span class="value" id="score"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">📈 النسبة</span>
+                <span class="value" id="percent"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">⏱️ الوقت</span>
+                <span class="value" id="time"></span>
+            </div>
+
+            <div class="row">
+                <span class="label">🕐 التاريخ</span>
+                <span class="value" id="date"></span>
+            </div>
+
         </div>
+
+        <div id="wrongQuestions"></div>
+
     </div>
 
-    <script>
+    <div class="footer">
+        👨‍🏫 إعداد: المهندس / أشرف موسى<br>
+        📞 01110547129 - 01100429783
+    </div>
 
-        // =========================================================
-        // قراءة بيانات التقرير من الرابط
-        // البيانات تم ضغطها في script.js بواسطة LZString
-        // =========================================================
+</div>
 
-        function getReportData() {
+
+<script>
+
+    // =========================================================
+    // أدوات التشخيص
+    // =========================================================
+
+    const diagnostics =
+        document.getElementById('diagnostics');
+
+
+    function addStatus(type, title, message) {
+
+        const div = document.createElement('div');
+
+        div.className = 'status ' + type;
+
+        div.innerHTML =
+            '<strong>' + title + '</strong><br>' +
+            message;
+
+        diagnostics.appendChild(div);
+    }
+
+
+    function addDataBox(title, data) {
+
+        const wrapper = document.createElement('div');
+
+        wrapper.className = 'status info';
+
+        wrapper.innerHTML =
+            '<strong>' + title + '</strong>' +
+            '<div class="data-box"></div>';
+
+        wrapper.querySelector('.data-box').textContent =
+            data;
+
+        diagnostics.appendChild(wrapper);
+    }
+
+
+    // =========================================================
+    // قراءة البيانات
+    // =========================================================
+
+    function diagnoseReport() {
+
+        try {
+
+            // -------------------------------------------------
+            // 1. فحص URL
+            // -------------------------------------------------
+
+            const fullUrl = window.location.href;
+
+            addStatus(
+                'info',
+                '1️⃣ الرابط الحالي',
+                'تم قراءة الرابط من الصفحة.'
+            );
+
+            addDataBox(
+                'الرابط الكامل:',
+                fullUrl
+            );
+
+
+            // -------------------------------------------------
+            // 2. فحص HASH
+            // -------------------------------------------------
 
             const hash = window.location.hash;
 
-            if (!hash || !hash.includes('data=')) {
-                console.error('لم يتم العثور على data داخل الرابط');
-                return null;
+            addStatus(
+                'info',
+                '2️⃣ فحص HASH',
+                'طول HASH = ' + hash.length
+            );
+
+            addDataBox(
+                'HASH:',
+                hash
+            );
+
+
+            // -------------------------------------------------
+            // 3. هل يوجد data= ؟
+            // -------------------------------------------------
+
+            if (!hash) {
+
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 1',
+                    'window.location.hash فارغ تمامًا.'
+                );
+
+                return;
             }
+
+
+            if (!hash.includes('data=')) {
+
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 2',
+                    'الرابط وصل للصفحة، ولكن لا يوجد بداخله data='
+                );
+
+                return;
+            }
+
+
+            addStatus(
+                'success',
+                '✅ data= موجود',
+                'تم العثور على بيانات التقرير داخل الرابط.'
+            );
+
+
+            // -------------------------------------------------
+            // 4. استخراج البيانات
+            // -------------------------------------------------
+
+            const dataStart =
+                hash.indexOf('data=') + 5;
+
+            const encoded =
+                hash.substring(dataStart);
+
+
+            addStatus(
+                'info',
+                '3️⃣ البيانات المضغوطة',
+                'طول البيانات = ' + encoded.length
+            );
+
+
+            if (!encoded) {
+
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 3',
+                    'data= موجود ولكن البيانات بعده فارغة.'
+                );
+
+                return;
+            }
+
+
+            addDataBox(
+                'بداية البيانات المضغوطة:',
+                encoded.substring(0, 500) +
+                (encoded.length > 500 ? '\n...' : '')
+            );
+
+
+            // -------------------------------------------------
+            // 5. فحص LZString
+            // -------------------------------------------------
+
+            addStatus(
+                'info',
+                '4️⃣ فحص LZString',
+                'typeof LZString = ' + typeof LZString
+            );
+
+
+            if (typeof LZString === 'undefined') {
+
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 4',
+                    'مكتبة LZString لم يتم تحميلها.'
+                );
+
+                return;
+            }
+
+
+            addStatus(
+                'success',
+                '✅ LZString موجودة',
+                'المكتبة تم تحميلها بنجاح.'
+            );
+
+
+            // -------------------------------------------------
+            // 6. فك الضغط
+            // -------------------------------------------------
+
+            let decoded;
 
             try {
 
-                // أخذ البيانات بعد data=
-                const encoded = hash.substring(
-                    hash.indexOf('data=') + 5
+                decoded =
+                    LZString.decompressFromEncodedURIComponent(
+                        encoded
+                    );
+
+            } catch (decodeError) {
+
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 5',
+                    'حدث خطأ أثناء فك ضغط LZString:<br>' +
+                    String(decodeError)
                 );
-
-                if (!encoded) {
-                    console.error('بيانات التقرير فارغة');
-                    return null;
-                }
-
-                // التأكد من وجود مكتبة LZString
-                if (typeof LZString === 'undefined') {
-                    console.error('مكتبة LZString غير موجودة');
-                    return null;
-                }
-
-                // فك ضغط البيانات
-                const decoded =
-                    LZString.decompressFromEncodedURIComponent(encoded);
-
-                if (!decoded) {
-                    console.error('فشل فك ضغط بيانات التقرير');
-                    return null;
-                }
-
-                // تحويل النص إلى JSON
-                const data = JSON.parse(decoded);
-
-                console.log(
-                    '✅ تم تحميل بيانات التقرير بنجاح:',
-                    data
-                );
-
-                return data;
-
-            } catch (e) {
-
-                console.error(
-                    '❌ خطأ في قراءة بيانات التقرير:',
-                    e
-                );
-
-                return null;
-            }
-        }
-
-
-        // =========================================================
-        // حماية النصوص عند عرضها داخل HTML
-        // =========================================================
-
-        function escapeHtml(value) {
-
-            if (value === null || value === undefined) {
-                return '';
-            }
-
-            return String(value)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-
-        // =========================================================
-        // عرض التقرير
-        // =========================================================
-
-        function renderReport(data) {
-
-            const container =
-                document.getElementById('container');
-
-            if (!data) {
-
-                container.innerHTML = `
-                    <h1>❌ خطأ في التقرير</h1>
-
-                    <div class="error-state">
-                        لم يتم العثور على بيانات التقرير.<br>
-                        قد يكون الرابط غير كامل أو تم قطعه أثناء الإرسال عبر واتساب.
-                    </div>
-
-                    <div class="footer">
-                        👨‍🏫 إعداد: المهندس / أشرف موسى<br>
-                        📞 01110547129 - 01100429783
-                    </div>
-                `;
 
                 return;
             }
 
 
-            // =====================================================
-            // تحديد التقدير
-            // =====================================================
+            if (!decoded) {
 
-            let gradeText = '';
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 5',
+                    'LZString موجودة، ولكنها لم تستطع فك البيانات.<br>' +
+                    'هذا يعني أن البيانات التي تم ضغطها في script.js لا تتطابق مع طريقة فك الضغط هنا.'
+                );
 
-            const percent = Number(data.percent) || 0;
-
-            if (percent >= 90) {
-
-                gradeText = '🌟 ممتاز';
-
-            } else if (percent >= 75) {
-
-                gradeText = '👍 جيد جداً';
-
-            } else if (percent >= 50) {
-
-                gradeText = '📚 جيد';
-
-            } else {
-
-                gradeText = '💪 يحتاج لمزيد من المذاكرة';
+                return;
             }
 
 
-            // =====================================================
-            // البيانات الأساسية
-            // =====================================================
-
-            let html = `
-
-                <h1>📋 تقرير اختبار الطالب</h1>
-
-                <p class="subtitle">
-                    👨‍🏫 للمعلم - المهندس / أشرف موسى
-                </p>
-
-                <div class="info-card">
-
-                    <div class="info-row">
-                        <span>👤 الطالب:</span>
-                        <strong>
-                            ${escapeHtml(data.student)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>📱 رقم الواتساب:</span>
-                        <strong style="direction:ltr;">
-                            ${escapeHtml(data.phone)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>📚 الصف:</span>
-                        <strong>
-                            ${escapeHtml(data.grade)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>📖 الوحدة:</span>
-                        <strong>
-                            ${escapeHtml(data.unit)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>📝 الدرس:</span>
-                        <strong>
-                            ${escapeHtml(data.lesson)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>🏆 الدرجة:</span>
-                        <strong>
-                            ${escapeHtml(data.score)}
-                            من
-                            ${escapeHtml(data.total)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>📈 النسبة:</span>
-                        <strong>
-                            ${escapeHtml(data.percent)}%
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>⏱️ الوقت المستغرق:</span>
-                        <strong>
-                            ${escapeHtml(data.time)}
-                        </strong>
-                    </div>
-
-                    <div class="info-row">
-                        <span>🕐 التاريخ:</span>
-                        <strong>
-                            ${escapeHtml(data.date)}
-                        </strong>
-                    </div>
-
-                    <div class="grade-badge">
-                        ${gradeText}
-                    </div>
-
-                </div>
-
-                <button
-                    class="send-btn"
-                    onclick="sendToStudent()"
-                >
-                    📱 إرسال الأخطاء للطالب على واتساب
-                </button>
-            `;
+            addStatus(
+                'success',
+                '✅ تم فك ضغط البيانات',
+                'طول البيانات بعد فك الضغط = ' +
+                decoded.length
+            );
 
 
-            // =====================================================
-            // عرض الأسئلة الخاطئة
-            // =====================================================
+            addDataBox(
+                'البيانات بعد فك الضغط:',
+                decoded
+            );
+
+
+            // -------------------------------------------------
+            // 7. JSON
+            // -------------------------------------------------
+
+            let data;
+
+            try {
+
+                data = JSON.parse(decoded);
+
+            } catch (jsonError) {
+
+                addStatus(
+                    'error',
+                    '❌ المشكلة رقم 6',
+                    'فك الضغط نجح، لكن JSON غير صالح.<br><br>' +
+                    String(jsonError)
+                );
+
+                return;
+            }
+
+
+            addStatus(
+                'success',
+                '✅ JSON صالح',
+                'تم تحويل البيانات إلى كائن JavaScript بنجاح.'
+            );
+
+
+            // -------------------------------------------------
+            // 8. عرض البيانات
+            // -------------------------------------------------
+
+            document.getElementById('student').textContent =
+                data.student || '';
+
+            document.getElementById('phone').textContent =
+                data.phone || '';
+
+            document.getElementById('grade').textContent =
+                data.grade || '';
+
+            document.getElementById('unit').textContent =
+                data.unit || '';
+
+            document.getElementById('lesson').textContent =
+                data.lesson || '';
+
+            document.getElementById('score').textContent =
+                (data.score ?? 0) +
+                ' من ' +
+                (data.total ?? 0);
+
+            document.getElementById('percent').textContent =
+                (data.percent ?? 0) + '%';
+
+            document.getElementById('time').textContent =
+                data.time || '';
+
+            document.getElementById('date').textContent =
+                data.date || '';
+
+
+            // -------------------------------------------------
+            // 9. الأسئلة الخاطئة
+            // -------------------------------------------------
+
+            const wrongContainer =
+                document.getElementById('wrongQuestions');
+
 
             if (
                 Array.isArray(data.wrongQuestions) &&
                 data.wrongQuestions.length > 0
             ) {
 
-                html += `
-
-                    <h2 style="
-                        color:#ef4444;
-                        margin:25px 0 15px;
-                        text-align:center;
-                        font-weight:900;
-                    ">
-                        ❌ الأخطاء (${data.wrongQuestions.length})
-                    </h2>
-                `;
+                let wrongHtml =
+                    '<div class="report-card">' +
+                    '<h3 style="color:#ef4444;">' +
+                    '❌ الأخطاء: ' +
+                    data.wrongQuestions.length +
+                    '</h3>';
 
 
-                data.wrongQuestions.forEach((q, i) => {
+                data.wrongQuestions.forEach(
+                    function (q, index) {
 
-                    html += `
+                        wrongHtml +=
+                            '<div style="' +
+                            'margin-top:15px;' +
+                            'padding:15px;' +
+                            'background:#fff;' +
+                            'border-radius:10px;' +
+                            'border-right:5px solid #ef4444;' +
+                            '">' +
 
-                        <div class="question-card">
+                            '<strong>سؤال ' +
+                            (index + 1) +
+                            '</strong><br><br>' +
 
-                            <span class="question-number">
-                                سؤال ${i + 1}
-                            </span>
+                            '📝 ' +
+                            escapeHtml(q.question) +
+                            '<br><br>' +
 
-                            <div class="question-text">
-                                ${escapeHtml(q.question)}
-                            </div>
+                            '❌ إجابة الطالب: ' +
+                            escapeHtml(q.studentAnswer) +
+                            '<br><br>' +
 
-                            <div class="answer-box wrong">
+                            '✅ الإجابة الصحيحة: ' +
+                            escapeHtml(q.correctAnswer) +
 
-                                <span class="answer-label">
-                                    ❌ إجابة الطالب:
-                                </span>
+                            '</div>';
+                    }
+                );
 
-                                ${escapeHtml(q.studentAnswer)}
 
-                            </div>
+                wrongHtml += '</div>';
 
-                            <div class="answer-box correct">
-
-                                <span class="answer-label">
-                                    ✅ الإجابة الصحيحة:
-                                </span>
-
-                                ${escapeHtml(q.correctAnswer)}
-
-                            </div>
-
-                        </div>
-                    `;
-                });
+                wrongContainer.innerHTML =
+                    wrongHtml;
 
             } else {
 
-                html += `
-
-                    <div class="empty-state">
-                        🎉 ممتاز! لا توجد أخطاء
-                    </div>
-                `;
+                wrongContainer.innerHTML =
+                    '<div class="status success">' +
+                    '🎉 لا توجد أخطاء.' +
+                    '</div>';
             }
 
 
-            // =====================================================
-            // الفوتر
-            // =====================================================
+            // -------------------------------------------------
+            // نجاح كامل
+            // -------------------------------------------------
 
-            html += `
-
-                <div class="footer">
-
-                    👨‍🏫 إعداد: المهندس / أشرف موسى<br>
-
-                    📞 01110547129 - 01100429783
-
-                </div>
-            `;
+            document.getElementById('report').style.display =
+                'block';
 
 
-            container.innerHTML = html;
-        }
+            addStatus(
+                'success',
+                '🎉 نجح الاختبار بالكامل',
+                'تم قراءة التقرير وفك ضغطه وتحويله إلى JSON بنجاح.'
+            );
 
 
-        // =========================================================
-        // تنظيف رقم واتساب
-        // =========================================================
+        } catch (error) {
 
-        function normalizeWhatsAppNumber(phone) {
+            addStatus(
+                'error',
+                '❌ خطأ غير متوقع',
+                String(error)
+            );
 
-            let number = String(phone || '')
-                .replace(/\D/g, '');
-
-            // إزالة 00 من بداية الرقم
-            if (number.startsWith('00')) {
-                number = number.substring(2);
-            }
-
-            // رقم مصري محلي 01xxxxxxxxx
-            if (
-                number.startsWith('01') &&
-                number.length === 11
-            ) {
-                number = '20' + number.substring(1);
-            }
-
-            return number;
-        }
-
-
-        // =========================================================
-        // إرسال الأخطاء للطالب عبر واتساب
-        // =========================================================
-
-        function sendToStudent() {
-
-            const data = getReportData();
-
-            if (!data) {
-
-                alert('❌ لا توجد بيانات للتقرير');
-
-                return;
-            }
-
-
-            // رقم الطالب
-            const phone =
-                normalizeWhatsAppNumber(data.phone);
-
-
-            if (!phone || phone.length < 10) {
-
-                alert('❌ رقم واتساب الطالب غير صحيح');
-
-                return;
-            }
-
-
-            // =====================================================
-            // إنشاء الرسالة
-            // =====================================================
-
-            let message = `📋 تصحيح الأخطاء
-
-📚 الصف: ${data.grade || ''}
-
-📖 الوحدة: ${data.unit || ''}
-
-📝 الدرس: ${data.lesson || ''}
-
-👤 الطالب: ${data.student || ''}
-
-🏆 الدرجة: ${data.score || 0} من ${data.total || 0}
-
-📈 النسبة: ${data.percent || 0}%
-
-⏱️ الوقت المستغرق: ${data.time || ''}
-
-━━━━━━━━━━━━━━━━━━━
-
-`;
-
-
-            // =====================================================
-            // إضافة الأخطاء
-            // =====================================================
-
-            if (
-                Array.isArray(data.wrongQuestions) &&
-                data.wrongQuestions.length > 0
-            ) {
-
-                message += `❌ الأخطاء وتصحيحها:\n\n`;
-
-                data.wrongQuestions.forEach((q, i) => {
-
-                    message += `سؤال ${i + 1}:\n`;
-
-                    message += `📝 ${q.question || ''}\n\n`;
-
-                    message += `❌ إجابتك: ${q.studentAnswer || ''}\n`;
-
-                    message += `✅ الإجابة الصحيحة: ${q.correctAnswer || ''}\n\n`;
-
-                    message += `━━━━━━━━━━━━━━━━━━━\n\n`;
-                });
-
-            } else {
-
-                message += `🎉 ممتاز! لا توجد أخطاء\n\n`;
-            }
-
-
-            message += `🕐 التاريخ: ${data.date || ''}\n\n`;
-
-            message += `👨‍🏫 إعداد: المهندس / أشرف موسى\n\n`;
-
-            message += `📞 01110547129 - 01100429783`;
-
-
-            // =====================================================
-            // فتح واتساب
-            // =====================================================
-
-            const whatsappUrl =
-                'https://wa.me/' +
-                phone +
-                '?text=' +
-                encodeURIComponent(message);
-
-
-            // فتح واتساب في نافذة جديدة
-            window.open(
-                whatsappUrl,
-                '_blank'
+            console.error(
+                'REPORT ERROR:',
+                error
             );
         }
+    }
 
 
-        // =========================================================
-        // تحميل التقرير عند فتح الصفحة
-        // =========================================================
+    // =========================================================
+    // حماية النصوص
+    // =========================================================
 
-        window.addEventListener(
-            'DOMContentLoaded',
-            function () {
+    function escapeHtml(value) {
 
-                const data = getReportData();
+        if (
+            value === null ||
+            value === undefined
+        ) {
+            return '';
+        }
 
-                renderReport(data);
-            }
-        );
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
-    </script>
+
+    // =========================================================
+    // بدء التشخيص
+    // =========================================================
+
+    window.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            diagnoseReport();
+
+        }
+    );
+
+</script>
 
 </body>
-
 </html>
 ```
